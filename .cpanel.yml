@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    # Define the live deployment path (your app’s main folder)
+    - export DEPLOYPATH=/home/wslscvqf/public_html/tuckshop
+
+    # Sync all repository files to the deployment folder
+    # This keeps app/, config/, routes/, etc., in /tuckshop
+    - /bin/rsync -av --delete ./ $DEPLOYPATH/
+
+    # Then ensure the /public folder is up-to-date with live doc root
+    - /bin/rsync -av --delete ./public/ $DEPLOYPATH/public/
+
+    # Optional: set permissions (safe defaults)
+    - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} \;
+    - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} \;
