@@ -3,7 +3,7 @@
 return [
     'app' => [
         'name' => 'Mall POS',
-        'url' => 'https//://tuckshop.mavicapp.com.ng/',
+        'url' => 'https://tuckshop.mavicapp.com.ng/',
         'timezone' => 'Africa/Lagos',
     ],
     'db' => [
