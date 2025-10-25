@@ -30,4 +30,9 @@ $router = new Router();
 require __DIR__ . '/../routes/web.php';
 
 $request = Request::capture();
-$router->dispatch($request);
+try {
+    $router->dispatch($request);
+} catch (\Throwable $e) {
+    http_response_code(500);
+    echo 'Application error';
+}

@@ -6,10 +6,14 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
 $user = Auth::user();
 $storeName = '';
 if ($user && ($user['store_id'] ?? null)) {
-  $pdo = DB::conn();
-  $st = $pdo->prepare('SELECT name FROM stores WHERE id = ?');
-  $st->execute([$user['store_id']]);
-  $storeName = (string)$st->fetchColumn();
+  try {
+    $pdo = DB::conn();
+    $st = $pdo->prepare('SELECT name FROM stores WHERE id = ?');
+    $st->execute([$user['store_id']]);
+    $storeName = (string)$st->fetchColumn();
+  } catch (\Throwable $e) {
+    // Keep empty store name on DB error
+  }
 }
 ?>
 <div class="mb-3">

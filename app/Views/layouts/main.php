@@ -10,15 +10,19 @@ $user = Auth::user();
 if (Auth::check()) {
   $sid = Auth::user()['store_id'] ?? null;
   if ($sid) {
-    $pdo = DB::conn();
-    $st = $pdo->prepare('SELECT name, currency_symbol, theme, logo_url FROM stores WHERE id = ?');
-    $st->execute([$sid]);
-    $row = $st->fetch(\PDO::FETCH_ASSOC);
-    if ($row) {
-      if (!empty($row['currency_symbol'])) { $currencySymbol = $row['currency_symbol']; }
-      if (!empty($row['theme'])) { $theme = $row['theme']; }
-      if (!empty($row['name'])) { $appName = $row['name']; }
-      if (!empty($row['logo_url'])) { $logoUrl = $row['logo_url']; }
+    try {
+      $pdo = DB::conn();
+      $st = $pdo->prepare('SELECT name, currency_symbol, theme, logo_url FROM stores WHERE id = ?');
+      $st->execute([$sid]);
+      $row = $st->fetch(\PDO::FETCH_ASSOC);
+      if ($row) {
+        if (!empty($row['currency_symbol'])) { $currencySymbol = $row['currency_symbol']; }
+        if (!empty($row['theme'])) { $theme = $row['theme']; }
+        if (!empty($row['name'])) { $appName = $row['name']; }
+        if (!empty($row['logo_url'])) { $logoUrl = $row['logo_url']; }
+      }
+    } catch (\Throwable $e) {
+      // Keep defaults on DB error
     }
   }
 }

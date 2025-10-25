@@ -5,7 +5,7 @@ DirectoryIndex index.php
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  # Route all non-file/non-dir requests to front controller
+  # Route only non-file/non-dir requests to root front controller
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.php [QSA,L]
