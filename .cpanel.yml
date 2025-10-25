@@ -1,4 +1,5 @@
+---
 deployment:
   tasks:
     - export DEPLOYPATH=/home/wslscvqf/public_html/tuckshop
-    - /bin/rsync -av --delete ./ $DEPLOYPATH
+    - /bin/rsync -av --delete ./public/ $DEPLOYPATH/
