@@ -6,6 +6,9 @@ use App\Controllers\StoreController;
 use App\Controllers\ProductController;
 use App\Controllers\VoucherController;
 use App\Controllers\SaleController;
+use App\Controllers\ReportController;
+use App\Controllers\ExpenseController;
+use App\Controllers\SettingsController;
 
 /* @var $router Router */
 
@@ -37,3 +40,9 @@ $router->post('/vouchers/save', [VoucherController::class, 'save']);
 $router->any('/pos', [SaleController::class, 'create']);
 $router->post('/pos/checkout', [SaleController::class, 'checkout']);
 $router->get('/sales/receipt', [SaleController::class, 'receipt']);
+$router->get('/reports/sales', [ReportController::class, 'sales']);
+$router->get('/expenses', [ExpenseController::class, 'index']);
+$router->any('/expenses/create', [ExpenseController::class, 'create']);
+$router->post('/expenses/save', [ExpenseController::class, 'save']);
+$router->get('/settings', [SettingsController::class, 'index']);
+$router->post('/settings/save', [SettingsController::class, 'save']);

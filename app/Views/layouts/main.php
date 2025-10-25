@@ -3,18 +3,25 @@ use App\Core\Config;
 use App\Core\Auth;
 use App\Core\DB;
 $currencySymbol = Config::get('defaults')['currency_symbol'] ?? '₦';
+$appName = Config::get('app')['name'] ?? 'Mall POS';
+$theme = Config::get('defaults')['theme'] ?? 'light';
+$logoUrl = '';
+$user = Auth::user();
 if (Auth::check()) {
   $sid = Auth::user()['store_id'] ?? null;
   if ($sid) {
     $pdo = DB::conn();
-    $st = $pdo->prepare('SELECT currency_symbol FROM stores WHERE id = ?');
+    $st = $pdo->prepare('SELECT name, currency_symbol, theme, logo_url FROM stores WHERE id = ?');
     $st->execute([$sid]);
-    $sym = $st->fetchColumn();
-    if ($sym) { $currencySymbol = $sym; }
+    $row = $st->fetch(\PDO::FETCH_ASSOC);
+    if ($row) {
+      if (!empty($row['currency_symbol'])) { $currencySymbol = $row['currency_symbol']; }
+      if (!empty($row['theme'])) { $theme = $row['theme']; }
+      if (!empty($row['name'])) { $appName = $row['name']; }
+      if (!empty($row['logo_url'])) { $logoUrl = $row['logo_url']; }
+    }
   }
 }
-$appName = Config::get('app')['name'] ?? 'Mall POS';
-$theme = Config::get('defaults')['theme'] ?? 'light';
 ?>
 <!doctype html>
 <html lang="en" data-theme="<?= htmlspecialchars($theme) ?>">
@@ -26,12 +33,18 @@ $theme = Config::get('defaults')['theme'] ?? 'light';
   <style>
     body { padding-top: 60px; }
     .currency { font-weight: 600; }
+    .brand-logo { height: 28px; width: auto; margin-right: 8px; border-radius: 4px; }
   </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard"><?= htmlspecialchars($appName) ?></a>
+    <a class="navbar-brand d-flex align-items-center" href="/dashboard">
+      <?php if ($logoUrl): ?>
+        <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="brand-logo">
+      <?php endif; ?>
+      <span><?= htmlspecialchars($appName) ?></span>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -41,8 +54,14 @@ $theme = Config::get('defaults')['theme'] ?? 'light';
         <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
         <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
         <li class="nav-item"><a class="nav-link" href="/stores">Stores</a></li>
+        <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
+        <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+        <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
       </ul>
       <span class="navbar-text me-3 currency">Currency: <?= htmlspecialchars($currencySymbol) ?></span>
+      <?php if ($user): ?>
+        <span class="navbar-text me-3">Signed in as <?= htmlspecialchars($user['name'] ?? '') ?></span>
+      <?php endif; ?>
       <a class="btn btn-outline-light" href="/logout">Logout</a>
     </div>
   </div>

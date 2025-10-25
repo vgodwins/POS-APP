@@ -1,0 +1,60 @@
+<?php
+$store = $store ?? [];
+?>
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">App Settings</div>
+      <div class="card-body">
+        <?php if (!empty($error)): ?>
+          <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+        <form method="post" action="/settings/save">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Business Name</label>
+              <input type="text" class="form-control" name="name" value="<?= htmlspecialchars($store['name'] ?? '') ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Currency Code</label>
+              <input type="text" class="form-control" name="currency_code" value="<?= htmlspecialchars($store['currency_code'] ?? 'NGN') ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Currency Symbol</label>
+              <input type="text" class="form-control" name="currency_symbol" value="<?= htmlspecialchars($store['currency_symbol'] ?? '₦') ?>">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Tax Rate</label>
+              <input type="number" step="0.001" class="form-control" name="tax_rate" value="<?= htmlspecialchars($store['tax_rate'] ?? 0.075) ?>">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Theme</label>
+              <select class="form-select" name="theme">
+                <option value="light" <?= ($store['theme'] ?? 'light') === 'light' ? 'selected' : '' ?>>Light</option>
+                <option value="dark" <?= ($store['theme'] ?? 'light') === 'dark' ? 'selected' : '' ?>>Dark</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-control" name="address" value="<?= htmlspecialchars($store['address'] ?? '') ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" name="phone" value="<?= htmlspecialchars($store['phone'] ?? '') ?>">
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">Logo URL</label>
+              <input type="text" class="form-control" name="logo_url" value="<?= htmlspecialchars($store['logo_url'] ?? '') ?>">
+            </div>
+          </div>
+          <button class="btn btn-success" type="submit">Save Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

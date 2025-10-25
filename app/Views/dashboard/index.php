@@ -1,7 +1,20 @@
 <?php
 use App\Core\Config;
+use App\Core\Auth;
+use App\Core\DB;
 $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
+$user = Auth::user();
+$storeName = '';
+if ($user && ($user['store_id'] ?? null)) {
+  $pdo = DB::conn();
+  $st = $pdo->prepare('SELECT name FROM stores WHERE id = ?');
+  $st->execute([$user['store_id']]);
+  $storeName = (string)$st->fetchColumn();
+}
 ?>
+<div class="mb-3">
+  <h4>Welcome, <?= htmlspecialchars($user['name'] ?? 'User') ?><?= $storeName ? ' — ' . htmlspecialchars($storeName) : '' ?></h4>
+</div>
 <div class="row">
   <div class="col-md-6">
     <div class="card mb-3">
