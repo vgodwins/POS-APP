@@ -2,6 +2,13 @@
 use App\Core\Config;
 $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
 ?>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Sales Reports</h3>
+  <div>
+    <a class="btn btn-outline-secondary" href="/reports/sales/export.csv">Export CSV</a>
+    <button class="btn btn-primary" onclick="window.print()">Export PDF</button>
+  </div>
+</div>
 <div class="row">
   <div class="col-md-3">
     <div class="card mb-3">

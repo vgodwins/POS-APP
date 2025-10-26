@@ -5,6 +5,10 @@
     <a href="/products/create" class="btn btn-primary">Add Product</a>
   </div>
 </div>
+<div class="mb-3">
+  <label class="form-label">Search / Scan Barcode</label>
+  <input type="text" id="productSearch" class="form-control" placeholder="Type name, SKU, or scan barcode">
+</div>
 <table class="table table-bordered table-striped">
   <thead>
     <tr>
@@ -27,3 +31,15 @@
     <?php endforeach; ?>
   </tbody>
 </table>
+<script>
+  const search = document.getElementById('productSearch');
+  function filterRows() {
+    const q = (search.value || '').trim().toLowerCase();
+    document.querySelectorAll('tbody tr').forEach(tr => {
+      const txt = tr.innerText.toLowerCase();
+      tr.style.display = txt.includes(q) ? '' : 'none';
+    });
+  }
+  search.addEventListener('input', filterRows);
+  search.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); filterRows(); }});
+</script>

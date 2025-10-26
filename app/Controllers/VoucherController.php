@@ -2,8 +2,8 @@
 namespace App\Controllers;
 
 use App\Core\Request;
-use App\Core\Auth;
 use App\Core\Response;
+use App\Core\Auth;
 use App\Models\Voucher;
 use App\Core\Config;
 use App\Models\Store;
@@ -39,5 +39,22 @@ class VoucherController {
             'store_id' => $storeId,
         ]);
         Response::redirect('/vouchers');
+    }
+
+    public function validate(Request $req): void {
+        if (!Auth::check()) { Response::json(['ok' => false, 'error' => 'unauthorized'], 401); }
+        $code = trim($req->query['code'] ?? '');
+        if ($code === '') { Response::json(['ok' => false, 'error' => 'missing_code'], 400); }
+        $storeId = Auth::user()['store_id'] ?? null;
+        try {
+            $v = new Voucher();
+            $voucher = $v->findByCode($code, $storeId);
+            if (!$voucher) { Response::json(['ok' => false, 'error' => 'invalid'], 404); }
+            $valid = strtotime($voucher['expiry_date']) >= strtotime(date('Y-m-d')) && $voucher['status'] === 'active';
+            if (!$valid) { Response::json(['ok' => false, 'error' => 'expired_or_used'], 400); }
+            Response::json(['ok' => true, 'value' => (float)$voucher['value']]);
+        } catch (\Throwable $e) {
+            Response::json(['ok' => false, 'error' => 'server_error'], 500);
+        }
     }
 }

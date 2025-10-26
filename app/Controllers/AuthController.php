@@ -52,25 +52,33 @@ class AuthController {
         if (!$name || !$email || !$password) {
             view('auth/register', ['error' => 'All fields are required']); return;
         }
-        $pdo = DB::conn();
-        $count = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
-        $role = $count === 0 ? 'admin' : 'owner';
+        
+        try {
+            $userModel = new User();
+            $existing = $userModel->findByEmail($email);
+            if ($existing) { view('auth/register', ['error' => 'Email already exists']); return; }
 
-        $storeId = null;
-        if ($role === 'owner') {
-            // Auto-create a store for the owner
-            $storeModel = new Store();
-            $storeId = $storeModel->create([
-                'name' => $name . "'s Store",
-                'currency_code' => 'NGN',
-                'currency_symbol' => '₦',
-                'tax_rate' => 0.075,
-                'theme' => 'light',
-            ]);
+            $pdo = DB::conn();
+            $count = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+            $role = $count === 0 ? 'admin' : 'owner';
+
+            $storeId = null;
+            if ($role === 'owner') {
+                // Auto-create a store for the owner
+                $storeModel = new Store();
+                $storeId = $storeModel->create([
+                    'name' => $name . "'s Store",
+                    'currency_code' => 'NGN',
+                    'currency_symbol' => '₦',
+                    'tax_rate' => 0.075,
+                    'theme' => 'light',
+                ]);
+            }
+
+            $userId = $userModel->create(['name' => $name, 'email' => $email, 'password' => $password], $role, $storeId);
+            view('auth/login', ['success' => 'Account created. Please login.']);
+        } catch (\Throwable $e) {
+            view('auth/register', ['error' => 'Registration failed. Please check database setup and try again.']);
         }
-
-        $userModel = new User();
-        $userId = $userModel->create(['name' => $name, 'email' => $email, 'password' => $password], $role, $storeId);
-        view('auth/login', ['success' => 'Account created. Please login.']);
     }
 }

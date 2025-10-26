@@ -34,44 +34,53 @@ if (Auth::check()) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= htmlspecialchars($appName) ?></title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { padding-top: 60px; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .sidebar { width: 240px; min-height: 100vh; position: fixed; top: 0; left: 0; background-color: #212529; color: #fff; padding: 16px; }
+    .content { margin-left: 240px; padding: 24px; }
     .currency { font-weight: 600; }
     .brand-logo { height: 28px; width: auto; margin-right: 8px; border-radius: 4px; }
+    .nav-link { color: #fff; }
+    .nav-link:hover { color: #f8f9fa; }
+    .app-name { font-weight: 600; }
   </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center" href="/dashboard">
+<div class="d-flex">
+  <aside class="sidebar">
+    <a class="d-flex align-items-center mb-3 text-decoration-none text-white" href="/dashboard">
       <?php if ($logoUrl): ?>
         <img src="<?= htmlspecialchars($logoUrl) ?>" alt="Logo" class="brand-logo">
       <?php endif; ?>
-      <span><?= htmlspecialchars($appName) ?></span>
+      <span class="app-name"><?= htmlspecialchars($appName) ?></span>
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
-        <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
-        <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
-        <li class="nav-item"><a class="nav-link" href="/stores">Stores</a></li>
-        <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
-        <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
-        <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
-      </ul>
-      <span class="navbar-text me-3 currency">Currency: <?= htmlspecialchars($currencySymbol) ?></span>
-      <?php if ($user): ?>
-        <span class="navbar-text me-3">Signed in as <?= htmlspecialchars($user['name'] ?? '') ?></span>
+    <ul class="nav flex-column mb-3">
+      <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
+      <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
+      <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
+      <li class="nav-item"><a class="nav-link" href="/stores">Stores</a></li>
+      <?php if (\App\Core\Auth::hasRole('admin')): ?>
+      <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
       <?php endif; ?>
-      <a class="btn btn-outline-light" href="/logout">Logout</a>
+      <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
+      <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+      <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+    </ul>
+    <div class="mt-4 text-white-50 small">
+      <div class="mb-2">Currency: <span class="currency"><?= htmlspecialchars($currencySymbol) ?></span></div>
+      <?php if ($user): ?>
+        <div class="mb-2">Signed in as <?= htmlspecialchars($user['name'] ?? '') ?></div>
+      <?php endif; ?>
+      <a class="btn btn-sm btn-outline-light" href="/logout">Logout</a>
     </div>
-  </div>
-</nav>
-<div class="container">
-  <?php include $viewFile; ?>
+  </aside>
+  <main class="content flex-grow-1">
+    <div class="container">
+      <?php include $viewFile; ?>
+    </div>
+  </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

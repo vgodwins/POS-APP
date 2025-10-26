@@ -1,16 +1,16 @@
 <?php
-// Copy of env.example.php; update values for your environment
+// Local development config
 return [
     'app' => [
         'name' => 'Mall POS',
-        'url' => 'https://tuckshop.mavicapp.com.ng/',
+        'url' => 'http://127.0.0.1:8000',
         'timezone' => 'Africa/Lagos',
     ],
     'db' => [
-        'host' => 'localhost',
-        'database' => 'wslscvqf_pos_app',
-        'user' => 'wslscvqf_pos_user',
-        'pass' => '7,yp$bUt_[rG;aI{',
+        'host' => '127.0.0.1',
+        'database' => 'pos_app',
+        'user' => 'root',
+        'pass' => '',
     ],
     'mail' => [
         'host' => 'smtp.example.com',

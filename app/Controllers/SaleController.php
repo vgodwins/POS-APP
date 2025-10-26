@@ -67,16 +67,29 @@ class SaleController {
             }
         }
 
-        // Split payments
-        $payCash = (float)($payments['cash'] ?? 0);
+        // Payments: auto-fill cash to cover remainder, relax strict equality
         $payCard = (float)($payments['card'] ?? 0);
         $payBank = (float)($payments['bank_transfer'] ?? 0);
         $payVoucher = $voucherApplied;
-        $paid = $payCash + $payCard + $payBank + $payVoucher;
-        if (abs($paid - $total) > 0.01) {
-            view('pos/create', ['products' => (new Product())->all($storeId), 'error' => 'Payment must equal total.']);
-            return;
+        $nonCash = $payCard + $payBank + $payVoucher;
+        if ($nonCash >= $total) {
+            // Clamp non-cash to not exceed total
+            $excess = $nonCash - $total;
+            if ($excess > 0) {
+                // Reduce bank first, then card
+                if ($payBank >= $excess) {
+                    $payBank -= $excess;
+                } else {
+                    $excess -= $payBank; $payBank = 0.0;
+                    $payCard = max(0.0, $payCard - $excess);
+                }
+                $nonCash = $payCard + $payBank + $payVoucher;
+            }
+            $payCash = 0.0;
+        } else {
+            $payCash = $total - $nonCash;
         }
+        $paid = $payCash + $payCard + $payBank + $payVoucher; // should equal $total now
 
         // Persist sale
         $saleModel = new Sale();

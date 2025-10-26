@@ -31,20 +31,28 @@ class SettingsController {
             'phone' => trim($req->body['phone'] ?? ''),
             'logo_url' => trim($req->body['logo_url'] ?? ''),
         ];
-        // Update stores table directly
-        $pdo = \App\Core\DB::conn();
-        $pdo->prepare('UPDATE stores SET name = :name, currency_code = :currency_code, currency_symbol = :currency_symbol, tax_rate = :tax_rate, theme = :theme, address = :address, phone = :phone, logo_url = :logo_url WHERE id = :id')
-            ->execute([
-                'name' => $data['name'],
-                'currency_code' => $data['currency_code'],
-                'currency_symbol' => $data['currency_symbol'],
-                'tax_rate' => $data['tax_rate'],
-                'theme' => $data['theme'],
-                'address' => $data['address'],
-                'phone' => $data['phone'],
-                'logo_url' => $data['logo_url'],
-                'id' => $sid,
+        try {
+            $pdo = \App\Core\DB::conn();
+            $pdo->prepare('UPDATE stores SET name = :name, currency_code = :currency_code, currency_symbol = :currency_symbol, tax_rate = :tax_rate, theme = :theme, address = :address, phone = :phone, logo_url = :logo_url WHERE id = :id')
+                ->execute([
+                    'name' => $data['name'],
+                    'currency_code' => $data['currency_code'],
+                    'currency_symbol' => $data['currency_symbol'],
+                    'tax_rate' => $data['tax_rate'],
+                    'theme' => $data['theme'],
+                    'address' => $data['address'],
+                    'phone' => $data['phone'],
+                    'logo_url' => $data['logo_url'],
+                    'id' => $sid,
+                ]);
+            Response::redirect('/settings');
+        } catch (\Throwable $e) {
+            // Show friendly error with current store values
+            $store = (new Store())->find((int)$sid);
+            view('settings/index', [
+                'store' => $store,
+                'error' => 'Could not save settings. Please check database/migrations.',
             ]);
-        Response::redirect('/settings');
+        }
     }
 }
