@@ -18,7 +18,9 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
         <p class="mb-1">Sales: <?= (int)($today['sales_count'] ?? 0) ?></p>
         <p class="mb-1">Subtotal: <?= htmlspecialchars($currency) ?><?= number_format((float)($today['subtotal'] ?? 0),2) ?></p>
         <p class="mb-1">Tax: <?= htmlspecialchars($currency) ?><?= number_format((float)($today['tax_total'] ?? 0),2) ?></p>
+        <p class="mb-1">Expenses: <?= htmlspecialchars($currency) ?><?= number_format((float)($expenses['today'] ?? 0),2) ?></p>
         <h5>Revenue: <?= htmlspecialchars($currency) ?><?= number_format((float)($today['total_amount'] ?? 0),2) ?></h5>
+        <h5>Gross Income: <?= htmlspecialchars($currency) ?><?= number_format((float)($gross['today'] ?? 0),2) ?></h5>
       </div>
     </div>
   </div>
@@ -29,7 +31,9 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
         <p class="mb-1">Sales: <?= (int)($week['sales_count'] ?? 0) ?></p>
         <p class="mb-1">Subtotal: <?= htmlspecialchars($currency) ?><?= number_format((float)($week['subtotal'] ?? 0),2) ?></p>
         <p class="mb-1">Tax: <?= htmlspecialchars($currency) ?><?= number_format((float)($week['tax_total'] ?? 0),2) ?></p>
+        <p class="mb-1">Expenses: <?= htmlspecialchars($currency) ?><?= number_format((float)($expenses['week'] ?? 0),2) ?></p>
         <h5>Revenue: <?= htmlspecialchars($currency) ?><?= number_format((float)($week['total_amount'] ?? 0),2) ?></h5>
+        <h5>Gross Income: <?= htmlspecialchars($currency) ?><?= number_format((float)($gross['week'] ?? 0),2) ?></h5>
       </div>
     </div>
   </div>
@@ -40,7 +44,9 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
         <p class="mb-1">Sales: <?= (int)($month['sales_count'] ?? 0) ?></p>
         <p class="mb-1">Subtotal: <?= htmlspecialchars($currency) ?><?= number_format((float)($month['subtotal'] ?? 0),2) ?></p>
         <p class="mb-1">Tax: <?= htmlspecialchars($currency) ?><?= number_format((float)($month['tax_total'] ?? 0),2) ?></p>
+        <p class="mb-1">Expenses: <?= htmlspecialchars($currency) ?><?= number_format((float)($expenses['month'] ?? 0),2) ?></p>
         <h5>Revenue: <?= htmlspecialchars($currency) ?><?= number_format((float)($month['total_amount'] ?? 0),2) ?></h5>
+        <h5>Gross Income: <?= htmlspecialchars($currency) ?><?= number_format((float)($gross['month'] ?? 0),2) ?></h5>
       </div>
     </div>
   </div>
@@ -51,7 +57,9 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
         <p class="mb-1">Sales: <?= (int)($year['sales_count'] ?? 0) ?></p>
         <p class="mb-1">Subtotal: <?= htmlspecialchars($currency) ?><?= number_format((float)($year['subtotal'] ?? 0),2) ?></p>
         <p class="mb-1">Tax: <?= htmlspecialchars($currency) ?><?= number_format((float)($year['tax_total'] ?? 0),2) ?></p>
+        <p class="mb-1">Expenses: <?= htmlspecialchars($currency) ?><?= number_format((float)($expenses['year'] ?? 0),2) ?></p>
         <h5>Revenue: <?= htmlspecialchars($currency) ?><?= number_format((float)($year['total_amount'] ?? 0),2) ?></h5>
+        <h5>Gross Income: <?= htmlspecialchars($currency) ?><?= number_format((float)($gross['year'] ?? 0),2) ?></h5>
       </div>
     </div>
   </div>

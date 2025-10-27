@@ -13,7 +13,7 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
   <div class="col-md-3"><div class="card"><div class="card-body"><h6>This Year</h6><h5><?= htmlspecialchars($currency) ?><?= number_format((float)($summary['year'] ?? 0),2) ?></h5></div></div></div>
 </div>
 <table class="table table-striped">
-  <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Note</th></tr></thead>
+  <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Note</th><th>Actions</th></tr></thead>
   <tbody>
   <?php foreach (($expenses ?? []) as $ex): ?>
     <tr>
@@ -21,6 +21,14 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
       <td><?= htmlspecialchars($ex['category'] ?? '') ?></td>
       <td><?= htmlspecialchars($currency) ?><?= number_format((float)($ex['amount'] ?? 0),2) ?></td>
       <td><?= htmlspecialchars($ex['note'] ?? '') ?></td>
+      <td>
+        <a class="btn btn-sm btn-secondary" href="/expenses/edit?id=<?= (int)($ex['id'] ?? 0) ?>">Edit</a>
+        <form method="post" action="/expenses/delete" class="d-inline" onsubmit="return confirm('Delete this expense?');">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+          <input type="hidden" name="id" value="<?= (int)($ex['id'] ?? 0) ?>">
+          <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+        </form>
+      </td>
     </tr>
   <?php endforeach; ?>
   </tbody>

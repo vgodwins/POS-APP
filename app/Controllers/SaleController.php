@@ -147,4 +147,23 @@ class SaleController {
         } catch (\Throwable $e) { $storeRow = null; }
         view('sales/receipt', ['sale' => $saleRow, 'items' => $saleItems, 'payments' => $salePayments, 'store' => $storeRow]);
     }
+
+    public function invoice(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('cashier') || Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); }
+        $idParam = (int)($req->query['id'] ?? 0);
+        $saleId = $idParam > 0 ? $idParam : (int)($_SESSION['last_sale_id'] ?? 0);
+        if ($saleId <= 0) { Response::redirect('/dashboard'); return; }
+        $pdo = \App\Core\DB::conn();
+        $sale = $pdo->prepare('SELECT * FROM sales WHERE id = ?'); $sale->execute([$saleId]); $saleRow = $sale->fetch();
+        if (!$saleRow) { Response::redirect('/dashboard'); return; }
+        $items = $pdo->prepare('SELECT * FROM sale_items WHERE sale_id = ?'); $items->execute([$saleId]); $saleItems = $items->fetchAll();
+        $payments = $pdo->prepare('SELECT * FROM payments WHERE sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
+        $storeRow = null;
+        try {
+            $sid = (int)($saleRow['store_id'] ?? 0);
+            if ($sid > 0) { $storeRow = (new \App\Models\Store())->find($sid); }
+        } catch (\Throwable $e) { $storeRow = null; }
+        view('sales/invoice', ['sale' => $saleRow, 'items' => $saleItems, 'payments' => $salePayments, 'store' => $storeRow]);
+    }
 }

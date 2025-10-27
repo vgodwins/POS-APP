@@ -1,5 +1,6 @@
 <?php
 $store = $store ?? [];
+$env = strtolower((string)((\App\Core\Config::get('app')['env'] ?? 'development')));
 ?>
 <div class="row justify-content-center">
   <div class="col-md-8">
@@ -75,6 +76,20 @@ $store = $store ?? [];
           <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
           <input type="file" name="logo" accept="image/*" class="form-control" style="max-width: 360px;" required>
           <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+      </div>
+    </div>
+    <div class="card mt-4 border-danger">
+      <div class="card-header text-danger">Danger Zone</div>
+      <div class="card-body">
+        <p class="mb-3">This will permanently delete all <strong>sales</strong>, <strong>expenses</strong>, <strong>vouchers</strong>, and <strong>customers</strong> for this store. Products and settings are kept. This cannot be undone.</p>
+        <?php if ($env === 'production'): ?>
+          <div class="alert alert-warning mb-3">Clear App Data is disabled in production.</div>
+        <?php endif; ?>
+        <form method="post" action="/settings/clear_data" class="d-flex gap-2 align-items-center">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+          <input type="text" name="confirm_text" class="form-control" placeholder="Type CLEAR to confirm" style="max-width: 260px;" required>
+          <button type="submit" class="btn btn-danger">Clear App Data</button>
         </form>
       </div>
     </div>

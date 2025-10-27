@@ -83,4 +83,43 @@ class SettingsController {
         } catch (\Throwable $e) { /* ignore and proceed */ }
         Response::redirect('/settings');
     }
+
+    public function clearData(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        // Only owner or admin can clear data
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); return; }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/settings'); return; }
+        $sid = Auth::user()['store_id'] ?? null;
+        if (!$sid) { Response::redirect('/settings'); return; }
+        // Environment safeguard: disable destructive action in production
+        try {
+            $appCfg = Config::get('app') ?? [];
+            $env = strtolower((string)($appCfg['env'] ?? 'development'));
+            if ($env === 'production') {
+                $store = (new Store())->find((int)$sid);
+                view('settings/index', ['store' => $store, 'error' => 'Clear Data is disabled in production.']);
+                return;
+            }
+        } catch (\Throwable $e) { /* default to allowing when config missing */ }
+        $confirmText = trim($req->body['confirm_text'] ?? '');
+        if ($confirmText !== 'CLEAR') {
+            $store = (new Store())->find((int)$sid);
+            view('settings/index', ['store' => $store, 'error' => 'Type CLEAR to confirm data wipe.']);
+            return;
+        }
+        try {
+            $pdo = \App\Core\DB::conn();
+            // Delete transactional data for this store
+            $pdo->prepare('DELETE FROM sales WHERE store_id = ?')->execute([$sid]);
+            $pdo->prepare('DELETE FROM expenses WHERE store_id = ?')->execute([$sid]);
+            $pdo->prepare('DELETE FROM vouchers WHERE store_id = ?')->execute([$sid]);
+            $pdo->prepare('DELETE FROM customers WHERE store_id = ?')->execute([$sid]);
+            $store = (new Store())->find((int)$sid);
+            view('settings/index', ['store' => $store, 'error' => 'All transactional data cleared for this store.']);
+        } catch (\Throwable $e) {
+            $store = (new Store())->find((int)$sid);
+            view('settings/index', ['store' => $store, 'error' => 'Failed to clear data.']);
+        }
+    }
 }

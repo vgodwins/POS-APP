@@ -10,6 +10,12 @@ class Expense extends BaseModel {
         }
         return $this->db->query('SELECT * FROM expenses ORDER BY created_at DESC')->fetchAll();
     }
+    public function find(int $id): ?array {
+        $st = $this->db->prepare('SELECT * FROM expenses WHERE id = ?');
+        $st->execute([$id]);
+        $row = $st->fetch();
+        return $row ?: null;
+    }
     public function create(array $data): int {
         $st = $this->db->prepare('INSERT INTO expenses(store_id, category, amount, note) VALUES(?,?,?,?)');
         $st->execute([
@@ -19,6 +25,19 @@ class Expense extends BaseModel {
             $data['note'] ?? null,
         ]);
         return (int)$this->db->lastInsertId();
+    }
+    public function update(int $id, array $data): void {
+        $st = $this->db->prepare('UPDATE expenses SET category = ?, amount = ?, note = ? WHERE id = ?');
+        $st->execute([
+            $data['category'],
+            (float)$data['amount'],
+            $data['note'] ?? null,
+            $id,
+        ]);
+    }
+    public function delete(int $id): void {
+        $st = $this->db->prepare('DELETE FROM expenses WHERE id = ?');
+        $st->execute([$id]);
     }
     public function summary(?int $storeId): array {
         $conds = [];

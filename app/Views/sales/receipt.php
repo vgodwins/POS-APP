@@ -78,6 +78,7 @@ $text .= "\n" . str_repeat('-', $width) . "\n" . implode("\n", $footer) . "\n";
     </pre>
     <div class="d-flex gap-2">
       <button class="btn btn-outline-secondary" onclick="window.print()">Print</button>
+      <a class="btn btn-outline-primary" href="/sales/invoice">View Invoice</a>
       <a class="btn btn-primary" href="/pos">New Sale</a>
     </div>
   </div>

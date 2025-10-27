@@ -5,6 +5,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Auth;
 use App\Core\DB;
+use App\Models\Expense;
 
 class ReportController {
     public function sales(Request $req): void {
@@ -26,7 +27,24 @@ class ReportController {
         $week = $fn('YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1)');
         $month = $fn('YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())');
         $year = $fn('YEAR(created_at) = YEAR(CURDATE())');
-        view('reports/sales', ['today' => $today, 'week' => $week, 'month' => $month, 'year' => $year]);
+
+        // Expenses summary for matching periods
+        $exp = new Expense();
+        $expSum = $exp->summary($storeId);
+        $expenses = [
+            'today' => (float)($expSum['today'] ?? 0),
+            'week' => (float)($expSum['week'] ?? 0),
+            'month' => (float)($expSum['month'] ?? 0),
+            'year' => (float)($expSum['year'] ?? 0),
+        ];
+        // Gross income = revenue - expenses
+        $gross = [
+            'today' => (float)$today['total_amount'] - $expenses['today'],
+            'week' => (float)$week['total_amount'] - $expenses['week'],
+            'month' => (float)$month['total_amount'] - $expenses['month'],
+            'year' => (float)$year['total_amount'] - $expenses['year'],
+        ];
+        view('reports/sales', ['today' => $today, 'week' => $week, 'month' => $month, 'year' => $year, 'expenses' => $expenses, 'gross' => $gross]);
     }
 
     public function exportCsv(Request $req): void {

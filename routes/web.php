@@ -56,6 +56,7 @@ $router->get('/vouchers/validate', [VoucherController::class, 'validate']);
 $router->any('/pos', [SaleController::class, 'create']);
 $router->post('/pos/checkout', [SaleController::class, 'checkout']);
 $router->get('/sales/receipt', [SaleController::class, 'receipt']);
+$router->get('/sales/invoice', [SaleController::class, 'invoice']);
 
 // Reports
 $router->get('/reports/sales', [ReportController::class, 'sales']);
@@ -65,9 +66,13 @@ $router->get('/reports/sales/export.csv', [ReportController::class, 'exportCsv']
 $router->get('/expenses', [ExpenseController::class, 'index']);
 $router->any('/expenses/create', [ExpenseController::class, 'create']);
 $router->post('/expenses/save', [ExpenseController::class, 'save']);
+$router->any('/expenses/edit', [ExpenseController::class, 'edit']);
+$router->post('/expenses/update', [ExpenseController::class, 'update']);
+$router->post('/expenses/delete', [ExpenseController::class, 'delete']);
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/save', [SettingsController::class, 'save']);
 $router->post('/settings/upload_logo', [SettingsController::class, 'uploadLogo']);
+$router->post('/settings/clear_data', [SettingsController::class, 'clearData']);
 
 // Product editing
 $router->any('/products/edit', [ProductController::class, 'edit']);

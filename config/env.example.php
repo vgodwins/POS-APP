@@ -4,6 +4,7 @@ return [
         'name' => 'Mall POS',
         'url' => 'http://localhost:8000',
         'timezone' => 'Africa/Lagos',
+        'env' => 'development',
     ],
     'db' => [
         'host' => '127.0.0.1',
