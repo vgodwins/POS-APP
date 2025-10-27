@@ -34,6 +34,14 @@ class AuthController {
             'store_id' => $user['store_id'],
             'roles' => $user['roles'],
         ]);
+        // Record login activity timestamp
+        try {
+            $pdo = DB::conn();
+            $st = $pdo->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?');
+            $st->execute([$user['id']]);
+        } catch (\Throwable $e) {
+            // ignore activity write failures
+        }
         Response::redirect('/dashboard');
     }
     public function logout(Request $req): void {

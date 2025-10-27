@@ -1,6 +1,7 @@
 <?php
 use App\Core\Config;
 $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
+$storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(Config::get('defaults')['tax_rate'] ?? 0.0);
 ?>
 <div class="row">
   <div class="col-md-8">
@@ -66,7 +67,7 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
 </div>
 <script>
   const products = <?= json_encode($products ?? []) ?>;
-  const defaultTaxRate = <?= json_encode( (float)(App\Core\Config::get('defaults')['tax_rate'] ?? 0) ) ?>;
+  const storeTaxRate = <?= json_encode($storeTaxRate) ?>;
   let voucherValue = 0.0;
 
   function addItemRow() {
@@ -100,7 +101,7 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
     const sel = tr.querySelector('select');
     const qty = parseInt(tr.querySelector('input[name="items[][qty]"]').value || '1', 10);
     const price = parseFloat(sel.selectedOptions[0]?.getAttribute('data-price') || '0');
-    const taxRate = parseFloat(sel.selectedOptions[0]?.getAttribute('data-tax') || defaultTaxRate);
+    const taxRate = storeTaxRate;
     tr.querySelector('.price').innerText = price.toFixed(2);
     const lineSub = price * qty;
     const lineTax = lineSub * taxRate;

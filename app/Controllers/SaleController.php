@@ -16,7 +16,12 @@ class SaleController {
         if (!(Auth::hasRole('cashier') || Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); }
         $p = new Product();
         $products = $p->all(Auth::user()['store_id'] ?? null);
-        view('pos/create', ['products' => $products]);
+        $store = null;
+        try {
+            $sid = Auth::user()['store_id'] ?? null;
+            if ($sid) { $store = (new Store())->find((int)$sid); }
+        } catch (\Throwable $e) { $store = null; }
+        view('pos/create', ['products' => $products, 'store' => $store]);
     }
 
     public function checkout(Request $req): void {
@@ -45,7 +50,7 @@ class SaleController {
             foreach ($dbp as $pp) { if ((int)$pp['id'] === $productId) { $find = $pp; break; } }
             if (!$find) continue;
             $price = (float)$find['price'];
-            $taxRate = (float)($find['tax_rate'] ?? $taxRateDefault);
+            $taxRate = $taxRateDefault;
             $lineSub = $price * $qty;
             $lineTax = $lineSub * $taxRate;
             $subtotal += $lineSub; $taxTotal += $lineTax;

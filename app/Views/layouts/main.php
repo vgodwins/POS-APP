@@ -45,6 +45,8 @@ if (Auth::check()) {
     .nav-link { color: #fff; }
     .nav-link:hover { color: #f8f9fa; }
     .app-name { font-weight: 600; }
+    /* Center common headings */
+    .card-header, h1, h2, h3, h4, h5 { text-align: center; }
   </style>
 </head>
 <body>
@@ -57,10 +59,11 @@ if (Auth::check()) {
       <span class="app-name"><?= htmlspecialchars($appName) ?></span>
     </a>
     <ul class="nav flex-column mb-3">
+      <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
       <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
       <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
-      <li class="nav-item"><a class="nav-link" href="/stores">Stores</a></li>
+      <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
       <?php if (\App\Core\Auth::hasRole('admin')): ?>
       <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
       <?php endif; ?>

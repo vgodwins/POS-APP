@@ -16,11 +16,13 @@ if ($user && ($user['store_id'] ?? null)) {
   }
 }
 ?>
-<div class="mb-3">
+<div class="mb-3 text-center">
   <h4>Welcome, <?= htmlspecialchars($user['name'] ?? 'User') ?><?= $storeName ? ' — ' . htmlspecialchars($storeName) : '' ?></h4>
+  <div class="text-muted">Dashboard</div>
+  <hr>
 </div>
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-7">
     <div class="card mb-3">
       <div class="card-body">
         <h5 class="card-title">Today Sales</h5>
@@ -28,7 +30,7 @@ if ($user && ($user['store_id'] ?? null)) {
       </div>
     </div>
   </div>
-  <div class="col-md-6">
+  <div class="col-md-5">
     <div class="card mb-3">
       <div class="card-body">
         <h5 class="card-title">Today Revenue</h5>
@@ -37,3 +39,27 @@ if ($user && ($user['store_id'] ?? null)) {
     </div>
   </div>
 </div>
+<?php if (\App\Core\Auth::hasRole('admin')): ?>
+<div class="row">
+  <div class="col-md-7"></div>
+  <div class="col-md-5">
+    <div class="card mb-3">
+      <div class="card-header">User Activity</div>
+      <div class="card-body">
+        <?php if (!empty($recentUsers)): ?>
+          <ul class="list-group list-group-flush">
+            <?php foreach ($recentUsers as $ru): ?>
+              <li class="list-group-item d-flex justify-content-between">
+                <span><?= htmlspecialchars($ru['name'] ?? '') ?> (<?= htmlspecialchars($ru['email'] ?? '') ?>)</span>
+                <span class="text-muted small"><?= htmlspecialchars($ru['last_login_at'] ?? '—') ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php else: ?>
+          <div class="text-muted">No recent user activity</div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
