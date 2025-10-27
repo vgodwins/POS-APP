@@ -3,6 +3,7 @@
   <div class="d-flex gap-2 align-items-center">
     <input type="text" id="voucherSearch" class="form-control" placeholder="Search code or value" style="max-width: 240px;">
     <a href="/vouchers/create" class="btn btn-primary">Create Voucher</a>
+    <a href="/vouchers/bulk" class="btn btn-outline-primary">Bulk Generate</a>
   </div>
 </div>
 <table class="table table-striped">
@@ -13,6 +14,7 @@
       <th>Currency</th>
       <th>Expiry</th>
       <th>Status</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -23,6 +25,9 @@
         <td><?= htmlspecialchars($v['currency_code']) ?></td>
         <td><?= htmlspecialchars($v['expiry_date']) ?></td>
         <td><?= htmlspecialchars($v['status']) ?></td>
+        <td>
+          <a href="/vouchers/edit?id=<?= (int)$v['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
+        </td>
       </tr>
     <?php endforeach; ?>
   </tbody>

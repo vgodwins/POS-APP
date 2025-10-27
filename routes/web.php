@@ -44,6 +44,10 @@ $router->any('/products/upload', [ProductController::class, 'uploadCsv']);
 $router->get('/vouchers', [VoucherController::class, 'index']);
 $router->any('/vouchers/create', [VoucherController::class, 'create']);
 $router->post('/vouchers/save', [VoucherController::class, 'save']);
+$router->any('/vouchers/edit', [VoucherController::class, 'edit']);
+$router->post('/vouchers/update', [VoucherController::class, 'update']);
+$router->any('/vouchers/bulk', [VoucherController::class, 'bulk']);
+$router->post('/vouchers/bulk_save', [VoucherController::class, 'bulkSave']);
 
 // Voucher API
 $router->get('/vouchers/validate', [VoucherController::class, 'validate']);

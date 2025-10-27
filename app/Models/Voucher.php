@@ -43,4 +43,48 @@ class Voucher extends BaseModel {
         } while ($exists);
         return $code;
     }
+
+    public function find(int $id): ?array {
+        $st = $this->db->prepare('SELECT * FROM vouchers WHERE id = ?');
+        $st->execute([$id]);
+        $row = $st->fetch();
+        return $row ?: null;
+    }
+
+    public function update(int $id, array $fields): bool {
+        $allowed = ['value','expiry_date','status','currency_code'];
+        $set = []; $params = [];
+        foreach ($fields as $k => $v) {
+            if (!in_array($k, $allowed, true)) { continue; }
+            $set[] = "$k = :$k"; $params[$k] = $v;
+        }
+        if (!$set) { return false; }
+        $params['id'] = $id;
+        $sql = 'UPDATE vouchers SET ' . implode(', ', $set) . ' WHERE id = :id';
+        $st = $this->db->prepare($sql);
+        return $st->execute($params) === true;
+    }
+
+    public function bulkCreate(int $storeId, float $value, string $currencyCode, string $expiryDate, int $count = 1, string $prefix = ''): array {
+        $created = [];
+        $prefix = trim($prefix);
+        for ($i = 0; $i < max(1, $count); $i++) {
+            $code = $this->generateUniqueCode(10);
+            if ($prefix !== '') {
+                // Ensure combined length fits within VARCHAR(32)
+                $maxRandom = 32 - strlen($prefix);
+                if ($maxRandom < 4) { $maxRandom = 4; } // minimum
+                $code = substr($prefix, 0, 32) . substr($code, 0, $maxRandom);
+            }
+            $this->create([
+                'code' => $code,
+                'value' => $value,
+                'currency_code' => $currencyCode,
+                'expiry_date' => $expiryDate,
+                'store_id' => $storeId,
+            ]);
+            $created[] = $code;
+        }
+        return $created;
+    }
 }

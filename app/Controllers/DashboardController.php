@@ -17,7 +17,7 @@ class DashboardController {
         if (Auth::hasRole('admin')) {
             try {
                 $pdo = DB::conn();
-                $st = $pdo->query('SELECT name, email, last_login_at FROM users ORDER BY last_login_at DESC NULLS LAST LIMIT 10');
+                $st = $pdo->query('SELECT name, email, last_login_at FROM users ORDER BY (last_login_at IS NULL), last_login_at DESC LIMIT 10');
                 $recentUsers = $st->fetchAll() ?: [];
             } catch (\Throwable $e) { $recentUsers = []; }
         }
