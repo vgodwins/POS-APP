@@ -19,6 +19,12 @@ $router->get('/logout', [AuthController::class, 'logout']);
 $router->any('/register', [AuthController::class, 'register']);
 $router->post('/register/save', [AuthController::class, 'saveRegister']);
 
+// Password reset
+$router->any('/password/forgot', [AuthController::class, 'forgot']);
+$router->post('/password/send_reset', [AuthController::class, 'sendReset']);
+$router->any('/password/reset', [AuthController::class, 'reset']);
+$router->post('/password/do_reset', [AuthController::class, 'doReset']);
+
 $router->get('/dashboard', [DashboardController::class, 'index']);
 
 // Store management (Admin)
