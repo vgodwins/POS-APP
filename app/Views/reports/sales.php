@@ -6,6 +6,7 @@ $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
   <h3>Sales Reports</h3>
   <div>
     <a class="btn btn-outline-secondary" href="/reports/sales/export.csv">Export CSV</a>
+    <a class="btn btn-success" href="/reports/sales/filter">Filter by Date / Item</a>
     <button class="btn btn-primary" onclick="window.print()">Export PDF</button>
   </div>
 </div>

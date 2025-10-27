@@ -1,0 +1,12 @@
+== Runtime Check ==
+SAPI: cli-server
+PHP Version: 8.4.8
+PHP_BINARY: C:\php 8.4\php.exe
+Loaded php.ini: (none)
+extension_dir: C:\php\ext
+PHP_INI_SCAN_DIR: (none)
+Loaded extensions (28): Core, PDO, Phar, Reflection, SPL, SimpleXML, bcmath, calendar, cli_server, ctype, date, dom, filter, hash, iconv, json, libxml, mysqlnd, pcre, random, readline, session, standard, tokenizer, xml, xmlreader, xmlwriter, zlib
+PDO: AVAILABLE
+PDO drivers (0): 
+extension_loaded('pdo_mysql'): false
+== Done ==

@@ -1,6 +1,9 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Vouchers</h3>
-  <a href="/vouchers/create" class="btn btn-primary">Create Voucher</a>
+  <div class="d-flex gap-2 align-items-center">
+    <input type="text" id="voucherSearch" class="form-control" placeholder="Search code or value" style="max-width: 240px;">
+    <a href="/vouchers/create" class="btn btn-primary">Create Voucher</a>
+  </div>
 </div>
 <table class="table table-striped">
   <thead>
@@ -24,3 +27,15 @@
     <?php endforeach; ?>
   </tbody>
 </table>
+<script>
+  const vSearch = document.getElementById('voucherSearch');
+  function filterVouchers() {
+    const q = (vSearch.value || '').trim().toLowerCase();
+    document.querySelectorAll('tbody tr').forEach(tr => {
+      const txt = tr.innerText.toLowerCase();
+      tr.style.display = txt.includes(q) ? '' : 'none';
+    });
+  }
+  vSearch.addEventListener('input', filterVouchers);
+  vSearch.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); filterVouchers(); }});
+</script>

@@ -30,9 +30,38 @@ class ProductController {
             'price' => (float)($req->body['price'] ?? 0),
             'tax_rate' => (float)(Config::get('defaults')['tax_rate'] ?? 0),
             'stock' => (int)($req->body['stock'] ?? 0),
+            'cost_price' => (float)($req->body['cost_price'] ?? 0),
+            'status' => (string)($req->body['status'] ?? 'valid'),
         ];
         $p = new Product();
         $p->create($data);
+        Response::redirect('/products');
+    }
+    public function edit(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        $id = (int)($req->query['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/products'); return; }
+        $p = new Product();
+        $prod = $p->find($id);
+        if (!$prod) { Response::redirect('/products'); return; }
+        view('products/edit', ['product' => $prod]);
+    }
+    public function update(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/products'); return; }
+        $id = (int)($req->body['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/products'); return; }
+        $data = [
+            'name' => trim($req->body['name'] ?? ''),
+            'sku' => trim($req->body['sku'] ?? ''),
+            'barcode' => trim($req->body['barcode'] ?? ''),
+            'price' => ($req->body['price'] !== '' ? (float)$req->body['price'] : null),
+            'stock' => ($req->body['stock'] !== '' ? (int)$req->body['stock'] : null),
+            'cost_price' => ($req->body['cost_price'] !== '' ? (float)$req->body['cost_price'] : null),
+            'status' => (string)($req->body['status'] ?? 'valid'),
+        ];
+        (new Product())->update($id, $data);
         Response::redirect('/products');
     }
     public function uploadCsv(Request $req): void {

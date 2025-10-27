@@ -52,7 +52,29 @@ $store = $store ?? [];
               <input type="text" class="form-control" name="logo_url" value="<?= htmlspecialchars($store['logo_url'] ?? '') ?>">
             </div>
           </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Company Number</label>
+              <input type="text" class="form-control" name="company_number" value="<?= htmlspecialchars($store['company_number'] ?? '') ?>" placeholder="e.g. RC1234567">
+            </div>
+          </div>
+          <?php if (!empty($store['logo_url'])): ?>
+            <div class="mb-3">
+              <label class="form-label">Current Logo</label><br>
+              <img src="<?= htmlspecialchars($store['logo_url']) ?>" alt="Logo" style="max-height:80px;">
+            </div>
+          <?php endif; ?>
           <button class="btn btn-success" type="submit">Save Settings</button>
+        </form>
+      </div>
+    </div>
+    <div class="card mt-4">
+      <div class="card-header">Upload Logo</div>
+      <div class="card-body">
+        <form method="post" action="/settings/upload_logo" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+          <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+          <input type="file" name="logo" accept="image/*" class="form-control" style="max-width: 360px;" required>
+          <button type="submit" class="btn btn-primary">Upload</button>
         </form>
       </div>
     </div>

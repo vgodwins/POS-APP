@@ -66,4 +66,49 @@ class ReportController {
             number_format((float)($row['total_amount'] ?? 0), 2, '.', ''),
         ];
     }
+    public function filter(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        $storeId = Auth::user()['store_id'] ?? null;
+        $from = trim($req->body['from'] ?? $req->query['from'] ?? '');
+        $to = trim($req->body['to'] ?? $req->query['to'] ?? '');
+        $productId = ($req->body['product_id'] ?? $req->query['product_id'] ?? '') !== '' ? (int)($req->body['product_id'] ?? $req->query['product_id'] ?? 0) : null;
+        $pdo = DB::conn();
+        // Base conditions
+        $conds = [];
+        $params = [];
+        if ($storeId) { $conds[] = 's.store_id = :sid'; $params['sid'] = $storeId; }
+        if ($from !== '') { $conds[] = 'DATE(s.created_at) >= :from'; $params['from'] = $from; }
+        if ($to !== '') { $conds[] = 'DATE(s.created_at) <= :to'; $params['to'] = $to; }
+        $join = '';
+        if ($productId) {
+            $join = 'INNER JOIN sale_items si ON si.sale_id = s.id';
+            $conds[] = 'si.product_id = :pid'; $params['pid'] = $productId;
+        } else {
+            $join = 'LEFT JOIN sale_items si ON si.sale_id = s.id';
+        }
+        $where = $conds ? (' WHERE ' . implode(' AND ', $conds)) : '';
+        // Revenue and subtotal/tax
+        $sqlAgg = 'SELECT COALESCE(SUM(s.total_amount),0) AS revenue, COALESCE(SUM(s.subtotal),0) AS subtotal, COALESCE(SUM(s.tax_total),0) AS tax_total FROM sales s ' . $join . $where;
+        $st = $pdo->prepare($sqlAgg); $st->execute($params);
+        $summary = $st->fetch() ?: ['revenue'=>0,'subtotal'=>0,'tax_total'=>0];
+        // Profit approx: sum((si.price - p.cost_price) * si.qty)
+        $sqlProfit = 'SELECT COALESCE(SUM((si.price - COALESCE(p.cost_price,0)) * si.qty),0) AS profit
+                      FROM sales s INNER JOIN sale_items si ON si.sale_id = s.id
+                      LEFT JOIN products p ON p.id = si.product_id' . $where;
+        $st2 = $pdo->prepare($sqlProfit); $st2->execute($params);
+        $profit = (float)($st2->fetchColumn() ?: 0);
+        // Products list for filter UI
+        $products = [];
+        try {
+            $products = $pdo->prepare('SELECT id,name FROM products WHERE store_id = ? ORDER BY name');
+            $products->execute([$storeId]);
+            $products = $products->fetchAll();
+        } catch (\Throwable $e) { $products = []; }
+        view('reports/filter', [
+            'summary' => $summary,
+            'profit' => $profit,
+            'filters' => ['from' => $from, 'to' => $to, 'product_id' => $productId],
+            'products' => $products,
+        ]);
+    }
 }

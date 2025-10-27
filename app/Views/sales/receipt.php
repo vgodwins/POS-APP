@@ -1,11 +1,27 @@
 <?php
 use App\Core\Config;
-$currency = Config::get('defaults')['currency_symbol'] ?? '₦';
+$currency = $store['currency_symbol'] ?? (Config::get('defaults')['currency_symbol'] ?? '₦');
 ?>
 <div class="card">
-  <div class="card-header">Receipt #<?= (int)($sale['id'] ?? 0) ?></div>
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div>
+      <strong><?= htmlspecialchars($store['name'] ?? 'Receipt') ?></strong><br>
+      <small>#<?= (int)($sale['id'] ?? 0) ?> • <?= htmlspecialchars($sale['created_at'] ?? '') ?></small>
+    </div>
+    <?php if (!empty($store['logo_url'])): ?>
+      <img src="<?= htmlspecialchars($store['logo_url']) ?>" alt="Logo" style="max-height:50px; max-width:180px; object-fit:contain;">
+    <?php endif; ?>
+  </div>
   <div class="card-body">
-    <p>Date: <?= htmlspecialchars($sale['created_at'] ?? '') ?></p>
+    <?php if (!empty($store)): ?>
+      <div class="mb-3" style="font-size: 0.95em; color: #555;">
+        <div><?= htmlspecialchars($store['address'] ?? '') ?></div>
+        <div><?= htmlspecialchars($store['phone'] ?? '') ?></div>
+        <?php if (!empty($store['company_number'])): ?>
+          <div>Company No: <?= htmlspecialchars($store['company_number']) ?></div>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
     <table class="table">
       <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Tax</th><th>Total</th></tr></thead>
       <tbody>

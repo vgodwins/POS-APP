@@ -26,8 +26,21 @@
               <input type="number" step="0.01" class="form-control" name="price" required>
             </div>
             <div class="col-md-3">
+              <label class="form-label">Cost Price</label>
+              <input type="number" step="0.01" class="form-control" name="cost_price" value="0">
+            </div>
+            <div class="col-md-3">
               <label class="form-label">Stock</label>
               <input type="number" class="form-control" name="stock" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" name="status">
+                <option value="valid">Valid</option>
+                <option value="expired">Expired</option>
+                <option value="damaged">Damaged</option>
+                <option value="returned">Returned</option>
+              </select>
             </div>
           </div>
           <div class="mt-3">

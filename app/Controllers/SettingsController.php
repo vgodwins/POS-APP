@@ -30,10 +30,11 @@ class SettingsController {
             'address' => trim($req->body['address'] ?? ''),
             'phone' => trim($req->body['phone'] ?? ''),
             'logo_url' => trim($req->body['logo_url'] ?? ''),
+            'company_number' => trim($req->body['company_number'] ?? ''),
         ];
         try {
             $pdo = \App\Core\DB::conn();
-            $pdo->prepare('UPDATE stores SET name = :name, currency_code = :currency_code, currency_symbol = :currency_symbol, tax_rate = :tax_rate, theme = :theme, address = :address, phone = :phone, logo_url = :logo_url WHERE id = :id')
+            $pdo->prepare('UPDATE stores SET name = :name, currency_code = :currency_code, currency_symbol = :currency_symbol, tax_rate = :tax_rate, theme = :theme, address = :address, phone = :phone, logo_url = :logo_url, company_number = :company_number WHERE id = :id')
                 ->execute([
                     'name' => $data['name'],
                     'currency_code' => $data['currency_code'],
@@ -43,6 +44,7 @@ class SettingsController {
                     'address' => $data['address'],
                     'phone' => $data['phone'],
                     'logo_url' => $data['logo_url'],
+                    'company_number' => $data['company_number'],
                     'id' => $sid,
                 ]);
             Response::redirect('/settings');
@@ -54,5 +56,31 @@ class SettingsController {
                 'error' => 'Could not save settings. Please check database/migrations.',
             ]);
         }
+    }
+
+    public function uploadLogo(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/settings'); return; }
+        $sid = Auth::user()['store_id'] ?? null;
+        if (!$sid) { Response::redirect('/settings'); return; }
+        if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            Response::redirect('/settings'); return;
+        }
+        $base = dirname(__DIR__, 2);
+        $uploadDir = $base . '/public/uploads/logos';
+        if (!is_dir($uploadDir)) { @mkdir($uploadDir, 0777, true); }
+        $ext = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+        $allowed = ['png','jpg','jpeg','gif','svg'];
+        if (!in_array($ext, $allowed, true)) { Response::redirect('/settings'); return; }
+        $fname = 'logo_' . (int)$sid . '_' . time() . '.' . $ext;
+        $dest = $uploadDir . '/' . $fname;
+        if (!@move_uploaded_file($_FILES['logo']['tmp_name'], $dest)) { Response::redirect('/settings'); return; }
+        $url = '/uploads/logos/' . $fname;
+        try {
+            $pdo = \App\Core\DB::conn();
+            $pdo->prepare('UPDATE stores SET logo_url = :url WHERE id = :id')->execute(['url' => $url, 'id' => $sid]);
+        } catch (\Throwable $e) { /* ignore and proceed */ }
+        Response::redirect('/settings');
     }
 }

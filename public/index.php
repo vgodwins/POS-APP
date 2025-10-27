@@ -3,6 +3,10 @@
 
 declare(strict_types=1);
 
+// Temporarily enable detailed errors to surface the root cause during debugging
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
+
 session_start();
 
 // Load environment config
@@ -34,5 +38,5 @@ try {
     $router->dispatch($request);
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo 'Application error';
+    echo 'Application error: ' . htmlspecialchars($e->getMessage());
 }

@@ -55,6 +55,7 @@ $router->get('/sales/receipt', [SaleController::class, 'receipt']);
 
 // Reports
 $router->get('/reports/sales', [ReportController::class, 'sales']);
+$router->any('/reports/sales/filter', [ReportController::class, 'filter']);
 $router->get('/reports/sales/export.csv', [ReportController::class, 'exportCsv']);
 
 $router->get('/expenses', [ExpenseController::class, 'index']);
@@ -62,3 +63,8 @@ $router->any('/expenses/create', [ExpenseController::class, 'create']);
 $router->post('/expenses/save', [ExpenseController::class, 'save']);
 $router->get('/settings', [SettingsController::class, 'index']);
 $router->post('/settings/save', [SettingsController::class, 'save']);
+$router->post('/settings/upload_logo', [SettingsController::class, 'uploadLogo']);
+
+// Product editing
+$router->any('/products/edit', [ProductController::class, 'edit']);
+$router->post('/products/update', [ProductController::class, 'update']);

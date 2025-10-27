@@ -1,0 +1,14 @@
+== Runtime Check ==
+SAPI: cli-server
+PHP Version: 8.3.27
+PHP_BINARY: C:\php\php.exe
+PHPRC: (none)
+Server port: 8001
+Loaded php.ini: C:\php\php.ini
+extension_dir: C:\php\ext
+PHP_INI_SCAN_DIR: (none)
+Loaded extensions (29): Core, PDO, Phar, Reflection, SPL, SimpleXML, bcmath, calendar, cli_server, ctype, date, dom, filter, hash, iconv, json, libxml, mysqlnd, pcre, pdo_mysql, random, readline, session, standard, tokenizer, xml, xmlreader, xmlwriter, zlib
+PDO: AVAILABLE
+PDO drivers (1): mysql
+extension_loaded('pdo_mysql'): true
+== Done ==

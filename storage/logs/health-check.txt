@@ -1,0 +1,6 @@
+== Test DB and Session (public) ==
+Loaded php.ini: C:\php\php.ini
+extension_dir: C:\php\ext
+DB ERROR: SQLSTATE[HY000] [2054] The server requested authentication method unknown to the client [auth_gssapi_client]
+Extension pdo_mysql: LOADED
+== Done ==

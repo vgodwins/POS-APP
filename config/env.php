@@ -8,9 +8,9 @@ return [
     ],
     'db' => [
         'host' => '127.0.0.1',
-        'database' => 'pos_app',
-        'user' => 'root',
-        'pass' => '',
+        'database' => 'wslscvqf_pos_app',
+        'user' => 'wslscvqf_victor_user',
+        'pass' => 'OA_Ee$#,qE_!y7OB',
     ],
     'mail' => [
         'host' => 'smtp.example.com',

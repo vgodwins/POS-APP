@@ -135,6 +135,11 @@ class SaleController {
         $sale = $pdo->prepare('SELECT * FROM sales WHERE id = ?'); $sale->execute([$saleId]); $saleRow = $sale->fetch();
         $items = $pdo->prepare('SELECT * FROM sale_items WHERE sale_id = ?'); $items->execute([$saleId]); $saleItems = $items->fetchAll();
         $payments = $pdo->prepare('SELECT * FROM payments WHERE sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
-        view('sales/receipt', ['sale' => $saleRow, 'items' => $saleItems, 'payments' => $salePayments]);
+        $storeRow = null;
+        try {
+            $sid = (int)($saleRow['store_id'] ?? 0);
+            if ($sid > 0) { $storeRow = (new \App\Models\Store())->find($sid); }
+        } catch (\Throwable $e) { $storeRow = null; }
+        view('sales/receipt', ['sale' => $saleRow, 'items' => $saleItems, 'payments' => $salePayments, 'store' => $storeRow]);
     }
 }
