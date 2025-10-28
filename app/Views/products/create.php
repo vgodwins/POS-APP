@@ -42,6 +42,15 @@
                 <option value="returned">Returned</option>
               </select>
             </div>
+            <div class="col-md-3">
+              <label class="form-label">Category</label>
+              <select class="form-select" name="category_id">
+                <option value="">None</option>
+                <?php foreach (($categories ?? []) as $c): ?>
+                  <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </div>
           <div class="mt-3">
             <button class="btn btn-success" type="submit">Save</button>

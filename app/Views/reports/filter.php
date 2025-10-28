@@ -5,6 +5,7 @@ $filters = $filters ?? [];
 $from = $filters['from'] ?? '';
 $to = $filters['to'] ?? '';
 $pid = $filters['product_id'] ?? '';
+$cid = $filters['category_id'] ?? '';
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Filter Sales Report</h3>
@@ -20,6 +21,15 @@ $pid = $filters['product_id'] ?? '';
       <div class="col-md-3">
         <label class="form-label">To</label>
         <input type="date" class="form-control" name="to" value="<?= htmlspecialchars($to) ?>">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Category</label>
+        <select class="form-select" name="category_id">
+          <option value="">All Categories</option>
+          <?php foreach (($categories ?? []) as $c): ?>
+            <option value="<?= (int)$c['id'] ?>" <?= ((int)$cid) === ((int)$c['id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
       </div>
       <div class="col-md-4">
         <label class="form-label">Item</label>
@@ -63,4 +73,3 @@ $pid = $filters['product_id'] ?? '';
     </div>
   </div>
 </div>
-

@@ -7,18 +7,53 @@ use App\Core\Auth;
 use App\Models\Voucher;
 use App\Core\Config;
 use App\Models\Store;
+use App\Models\Customer;
 
 class VoucherController {
     public function index(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
         $storeId = Auth::user()['store_id'] ?? null;
+        $customerId = ($req->query['customer_id'] ?? '') !== '' ? (int)$req->query['customer_id'] : null;
+        $linked = isset($req->query['linked']) ? (string)$req->query['linked'] : null; // '1' or '0'
+        $sort = isset($req->query['sort']) ? (string)$req->query['sort'] : null; // 'expiry_asc','expiry_desc','value_desc','value_asc'
         $v = new Voucher();
-        $list = $v->all($storeId);
-        view('vouchers/index', ['vouchers' => $list]);
+        $list = [];
+        try {
+            $list = $v->allWithCustomer($storeId, $customerId, ($linked === '1' || $linked === '0') ? $linked : null, $sort);
+        } catch (\Throwable $e) {
+            // Fallback if migration isn't applied yet
+            $list = $v->all($storeId);
+            if ($customerId !== null) { $list = array_values(array_filter($list, fn($row) => (int)($row['customer_id'] ?? 0) === $customerId)); }
+            if ($linked === '1') { $list = array_values(array_filter($list, fn($row) => ($row['customer_id'] ?? null) !== null)); }
+            if ($linked === '0') { $list = array_values(array_filter($list, fn($row) => ($row['customer_id'] ?? null) === null)); }
+            if ($sort) {
+                if ($sort === 'expiry_asc' || $sort === 'expiry_desc') {
+                    usort($list, function($a, $b) use ($sort) {
+                        $ea = strtotime($a['expiry_date'] ?? '1970-01-01');
+                        $eb = strtotime($b['expiry_date'] ?? '1970-01-01');
+                        $cmp = $ea <=> $eb;
+                        return $sort === 'expiry_asc' ? $cmp : -$cmp;
+                    });
+                } elseif ($sort === 'value_desc' || $sort === 'value_asc') {
+                    usort($list, function($a, $b) use ($sort) {
+                        $va = (float)($a['value'] ?? 0);
+                        $vb = (float)($b['value'] ?? 0);
+                        $cmp = $va <=> $vb;
+                        return $sort === 'value_asc' ? $cmp : -$cmp;
+                    });
+                }
+            }
+        }
+        $customers = [];
+        try { $customers = (new \App\Models\Customer())->allByStore((int)$storeId); } catch (\Throwable $e) { $customers = []; }
+        view('vouchers/index', ['vouchers' => $list, 'customers' => $customers, 'selectedCustomerId' => $customerId, 'selectedLinked' => ($linked === '1' || $linked === '0') ? $linked : null, 'selectedSort' => $sort]);
     }
     public function create(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        view('vouchers/create');
+        $storeId = Auth::user()['store_id'] ?? null;
+        $customers = [];
+        try { $customers = (new Customer())->allByStore((int)$storeId); } catch (\Throwable $e) { $customers = []; }
+        view('vouchers/create', ['customers' => $customers]);
     }
     public function save(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
@@ -37,6 +72,7 @@ class VoucherController {
             'currency_code' => $currencyCode,
             'expiry_date' => $expiry,
             'store_id' => $storeId,
+            'customer_id' => ($req->body['customer_id'] ?? '') !== '' ? (int)$req->body['customer_id'] : null,
         ]);
         Response::redirect('/vouchers');
     }
@@ -49,7 +85,27 @@ class VoucherController {
         $v = new Voucher();
         $voucher = $v->find($id);
         if (!$voucher || ($storeId && (int)$voucher['store_id'] !== (int)$storeId)) { Response::redirect('/vouchers'); return; }
-        view('vouchers/edit', ['voucher' => $voucher]);
+        $customers = [];
+        $currentCustomer = null;
+        try {
+            $customers = (new Customer())->allByStore((int)$storeId);
+            if (!empty($voucher['customer_id'])) {
+                $currentCustomer = (new Customer())->find((int)$voucher['customer_id']);
+            }
+        } catch (\Throwable $e) { $customers = []; $currentCustomer = null; }
+        view('vouchers/edit', ['voucher' => $voucher, 'customers' => $customers, 'currentCustomer' => $currentCustomer]);
+    }
+
+    public function view(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        $id = (int)($req->query['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/vouchers'); return; }
+        $storeId = Auth::user()['store_id'] ?? null;
+        $v = new Voucher();
+        $voucher = null;
+        try { $voucher = $v->findWithCustomer($id); } catch (\Throwable $e) { $voucher = $v->find($id); }
+        if (!$voucher || ($storeId && (int)$voucher['store_id'] !== (int)$storeId)) { Response::redirect('/vouchers'); return; }
+        view('vouchers/view', ['voucher' => $voucher]);
     }
 
     public function update(Request $req): void {
@@ -63,6 +119,8 @@ class VoucherController {
         $voucher = $v->find($id);
         if (!$voucher || ($storeId && (int)$voucher['store_id'] !== (int)$storeId)) { Response::redirect('/vouchers'); return; }
         $value = isset($req->body['value']) ? (float)$req->body['value'] : (float)$voucher['value'];
+        $topUp = ($req->body['top_up_value'] ?? '') !== '' ? (float)$req->body['top_up_value'] : 0.0;
+        if ($topUp > 0) { $value = $value + $topUp; }
         $expiry = trim($req->body['expiry_date'] ?? $voucher['expiry_date']);
         $status = trim($req->body['status'] ?? $voucher['status']);
         $currencyCode = trim($req->body['currency_code'] ?? $voucher['currency_code']);
@@ -72,6 +130,7 @@ class VoucherController {
                 'expiry_date' => $expiry,
                 'status' => $status,
                 'currency_code' => $currencyCode,
+                'customer_id' => ($req->body['customer_id'] ?? '') !== '' ? (int)$req->body['customer_id'] : null,
             ]);
         } catch (\Throwable $e) { /* swallow */ }
         Response::redirect('/vouchers');

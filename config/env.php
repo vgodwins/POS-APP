@@ -23,7 +23,8 @@ return [
     'defaults' => [
         'currency_code' => 'NGN',
         'currency_symbol' => '₦',
-        'tax_rate' => 0.075,
+    'tax_rate' => 0.075,
         'theme' => 'light',
+        'low_stock_threshold' => 5,
     ],
 ];

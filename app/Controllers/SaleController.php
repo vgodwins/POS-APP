@@ -16,12 +16,23 @@ class SaleController {
         if (!(Auth::hasRole('cashier') || Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); }
         $p = new Product();
         $products = $p->all(Auth::user()['store_id'] ?? null);
+        // Filter POS products to valid or returned only and exclude zero stock
+        $products = array_values(array_filter($products, function ($pr) {
+            $status = strtolower($pr['status'] ?? 'valid');
+            $stock = (int)($pr['stock'] ?? 0);
+            return in_array($status, ['valid','returned'], true) && $stock > 0;
+        }));
         $store = null;
         try {
             $sid = Auth::user()['store_id'] ?? null;
             if ($sid) { $store = (new Store())->find((int)$sid); }
         } catch (\Throwable $e) { $store = null; }
-        view('pos/create', ['products' => $products, 'store' => $store]);
+        // Determine low-stock list for alert
+        $threshold = (int)(Config::get('defaults')['low_stock_threshold'] ?? 5);
+        $lowStock = array_values(array_filter($products, function ($pr) use ($threshold) {
+            return (int)($pr['stock'] ?? 0) <= $threshold;
+        }));
+        view('pos/create', ['products' => $products, 'store' => $store, 'lowStock' => $lowStock, 'lowThreshold' => $threshold]);
     }
 
     public function checkout(Request $req): void {

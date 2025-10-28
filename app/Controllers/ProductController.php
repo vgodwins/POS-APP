@@ -6,17 +6,45 @@ use App\Core\Auth;
 use App\Core\Response;
 use App\Core\Config;
 use App\Models\Product;
+use App\Models\Category;
 
 class ProductController {
     public function index(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        $storeId = Auth::user()['store_id'] ?? null;
+        $categoryId = ($req->query['category_id'] ?? '') !== '' ? (int)$req->query['category_id'] : null;
         $p = new Product();
-        $list = $p->all(Auth::user()['store_id'] ?? null);
-        view('products/index', ['products' => $list]);
+        $list = $p->all($storeId, $categoryId);
+        $cats = (new Category())->allByStore($storeId);
+        // Inventory summary and low-stock metrics
+        $threshold = (int)(Config::get('defaults')['low_stock_threshold'] ?? 5);
+        $summary = [
+            'totalProducts' => count($list),
+            'totalStock' => array_sum(array_map(fn($r) => (int)($r['stock'] ?? 0), $list)),
+            'valid' => 0,
+            'expired' => 0,
+            'damaged' => 0,
+            'returned' => 0,
+            'lowStockCount' => 0,
+        ];
+        foreach ($list as $row) {
+            $status = strtolower($row['status'] ?? 'valid');
+            if (isset($summary[$status])) { $summary[$status]++; }
+            if ((int)($row['stock'] ?? 0) <= $threshold) { $summary['lowStockCount']++; }
+        }
+        view('products/index', [
+            'products' => $list,
+            'categories' => $cats,
+            'selectedCategoryId' => $categoryId,
+            'summary' => $summary,
+            'lowThreshold' => $threshold,
+        ]);
     }
     public function create(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        view('products/create');
+        $storeId = Auth::user()['store_id'] ?? null;
+        $cats = (new Category())->allByStore($storeId);
+        view('products/create', ['categories' => $cats]);
     }
     public function save(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
@@ -32,6 +60,7 @@ class ProductController {
             'stock' => (int)($req->body['stock'] ?? 0),
             'cost_price' => (float)($req->body['cost_price'] ?? 0),
             'status' => (string)($req->body['status'] ?? 'valid'),
+            'category_id' => ($req->body['category_id'] ?? '') !== '' ? (int)$req->body['category_id'] : null,
         ];
         $p = new Product();
         $p->create($data);
@@ -44,7 +73,9 @@ class ProductController {
         $p = new Product();
         $prod = $p->find($id);
         if (!$prod) { Response::redirect('/products'); return; }
-        view('products/edit', ['product' => $prod]);
+        $storeId = Auth::user()['store_id'] ?? null;
+        $cats = (new Category())->allByStore($storeId);
+        view('products/edit', ['product' => $prod, 'categories' => $cats]);
     }
     public function update(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
@@ -60,6 +91,7 @@ class ProductController {
             'stock' => ($req->body['stock'] !== '' ? (int)$req->body['stock'] : null),
             'cost_price' => ($req->body['cost_price'] !== '' ? (float)$req->body['cost_price'] : null),
             'status' => (string)($req->body['status'] ?? 'valid'),
+            'category_id' => ($req->body['category_id'] ?? '') !== '' ? (int)$req->body['category_id'] : null,
         ];
         (new Product())->update($id, $data);
         Response::redirect('/products');

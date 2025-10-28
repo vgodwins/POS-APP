@@ -24,5 +24,6 @@ return [
         'currency_symbol' => '₦',
         'tax_rate' => 0.075,
         'theme' => 'light',
+        'low_stock_threshold' => 5,
     ],
 ];

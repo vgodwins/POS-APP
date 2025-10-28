@@ -2,17 +2,27 @@
 namespace App\Models;
 
 class Product extends BaseModel {
-    public function all(?int $storeId): array {
+    public function all(?int $storeId, ?int $categoryId = null): array {
         if ($storeId) {
+            if ($categoryId) {
+                $st = $this->db->prepare('SELECT * FROM products WHERE store_id = ? AND category_id = ? ORDER BY name');
+                $st->execute([$storeId, $categoryId]);
+                return $st->fetchAll();
+            }
             $st = $this->db->prepare('SELECT * FROM products WHERE store_id = ? ORDER BY name');
             $st->execute([$storeId]);
+            return $st->fetchAll();
+        }
+        if ($categoryId) {
+            $st = $this->db->prepare('SELECT * FROM products WHERE category_id = ? ORDER BY name');
+            $st->execute([$categoryId]);
             return $st->fetchAll();
         }
         return $this->db->query('SELECT * FROM products ORDER BY name')->fetchAll();
     }
     public function create(array $data): int {
         // Insert using original columns; cost_price/status may be set via update if present
-        $st = $this->db->prepare('INSERT INTO products(store_id, name, sku, barcode, price, tax_rate, stock) VALUES(:store_id,:name,:sku,:barcode,:price,:tax_rate,:stock)');
+        $st = $this->db->prepare('INSERT INTO products(store_id, name, sku, barcode, price, tax_rate, stock, category_id) VALUES(:store_id,:name,:sku,:barcode,:price,:tax_rate,:stock,:category_id)');
         $st->execute([
             'store_id' => $data['store_id'],
             'name' => $data['name'],
@@ -21,6 +31,7 @@ class Product extends BaseModel {
             'price' => $data['price'],
             'tax_rate' => $data['tax_rate'],
             'stock' => $data['stock'],
+            'category_id' => $data['category_id'] ?? null,
         ]);
         $id = (int)$this->db->lastInsertId();
         // Try to update optional fields if provided
@@ -48,6 +59,7 @@ class Product extends BaseModel {
             'tax_rate' => $data['tax_rate'] ?? null,
             'cost_price' => $data['cost_price'] ?? null,
             'status' => $data['status'] ?? null,
+            'category_id' => $data['category_id'] ?? null,
         ];
         $set = []; $params = ['id' => $id];
         foreach ($fields as $k => $v) { if ($v !== null) { $set[] = "$k = :$k"; $params[$k] = $v; } }

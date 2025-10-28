@@ -13,6 +13,15 @@
             <input type="number" step="0.01" class="form-control" name="value" required>
           </div>
           <div class="mb-3">
+            <label class="form-label">Customer (optional)</label>
+            <select class="form-select" name="customer_id">
+              <option value="">None</option>
+              <?php foreach (($customers ?? []) as $c): ?>
+                <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name']) ?><?= $c['phone'] ? (' - ' . htmlspecialchars($c['phone'])) : '' ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="mb-3">
             <label class="form-label">Expiry Date</label>
             <input type="date" class="form-control" name="expiry_date" required>
           </div>

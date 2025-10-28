@@ -90,6 +90,7 @@ class ReportController {
         $from = trim($req->body['from'] ?? $req->query['from'] ?? '');
         $to = trim($req->body['to'] ?? $req->query['to'] ?? '');
         $productId = ($req->body['product_id'] ?? $req->query['product_id'] ?? '') !== '' ? (int)($req->body['product_id'] ?? $req->query['product_id'] ?? 0) : null;
+        $categoryId = ($req->body['category_id'] ?? $req->query['category_id'] ?? '') !== '' ? (int)($req->body['category_id'] ?? $req->query['category_id'] ?? 0) : null;
         $pdo = DB::conn();
         // Base conditions
         $conds = [];
@@ -98,9 +99,13 @@ class ReportController {
         if ($from !== '') { $conds[] = 'DATE(s.created_at) >= :from'; $params['from'] = $from; }
         if ($to !== '') { $conds[] = 'DATE(s.created_at) <= :to'; $params['to'] = $to; }
         $join = '';
-        if ($productId) {
+        if ($productId || $categoryId) {
             $join = 'INNER JOIN sale_items si ON si.sale_id = s.id';
-            $conds[] = 'si.product_id = :pid'; $params['pid'] = $productId;
+            if ($productId) { $conds[] = 'si.product_id = :pid'; $params['pid'] = $productId; }
+            if ($categoryId) {
+                $join .= ' LEFT JOIN products p ON p.id = si.product_id';
+                $conds[] = 'p.category_id = :cid'; $params['cid'] = $categoryId;
+            }
         } else {
             $join = 'LEFT JOIN sale_items si ON si.sale_id = s.id';
         }
@@ -122,11 +127,19 @@ class ReportController {
             $products->execute([$storeId]);
             $products = $products->fetchAll();
         } catch (\Throwable $e) { $products = []; }
+        // Categories list for filter UI
+        $categories = [];
+        try {
+            $catStmt = $pdo->prepare('SELECT id,name FROM categories WHERE store_id = ? ORDER BY name');
+            $catStmt->execute([$storeId]);
+            $categories = $catStmt->fetchAll() ?: [];
+        } catch (\Throwable $e) { $categories = []; }
         view('reports/filter', [
             'summary' => $summary,
             'profit' => $profit,
-            'filters' => ['from' => $from, 'to' => $to, 'product_id' => $productId],
+            'filters' => ['from' => $from, 'to' => $to, 'product_id' => $productId, 'category_id' => $categoryId],
             'products' => $products,
+            'categories' => $categories,
         ]);
     }
 }

@@ -6,7 +6,7 @@ $currencySymbol = Config::get('defaults')['currency_symbol'] ?? '₦';
 $appName = Config::get('app')['name'] ?? 'Mall POS';
 $theme = Config::get('defaults')['theme'] ?? 'light';
 $logoUrl = '';
-$user = Auth::user();
+$currentUser = Auth::user();
 if (Auth::check()) {
   $sid = Auth::user()['store_id'] ?? null;
   if ($sid) {
@@ -47,10 +47,19 @@ if (Auth::check()) {
     .app-name { font-weight: 600; }
     /* Center common headings */
     .card-header, h1, h2, h3, h4, h5 { text-align: center; }
+    /* Hide sidebar and remove margin on unauthenticated pages */
+    body.no-sidebar .sidebar { display: none; }
+    body.no-sidebar .content { margin-left: 0; }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .sidebar { position: static; width: 100%; min-height: auto; }
+      .content { margin-left: 0; }
+    }
   </style>
 </head>
-<body>
+<body class="<?= Auth::check() ? '' : 'no-sidebar' ?>">
 <div class="d-flex">
+  <?php if (Auth::check()): ?>
   <aside class="sidebar">
     <a class="d-flex align-items-center mb-3 text-decoration-none text-white" href="/dashboard">
       <?php if ($logoUrl): ?>
@@ -66,6 +75,7 @@ if (Auth::check()) {
       <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
       <?php if (\App\Core\Auth::hasRole('admin')): ?>
       <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
+      <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
       <?php endif; ?>
       <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
@@ -73,12 +83,13 @@ if (Auth::check()) {
     </ul>
     <div class="mt-4 text-white-50 small">
       <div class="mb-2">Currency: <span class="currency"><?= htmlspecialchars($currencySymbol) ?></span></div>
-      <?php if ($user): ?>
-        <div class="mb-2">Signed in as <?= htmlspecialchars($user['name'] ?? '') ?></div>
+      <?php if ($currentUser): ?>
+        <div class="mb-2">Signed in as <?= htmlspecialchars($currentUser['name'] ?? '') ?></div>
       <?php endif; ?>
       <a class="btn btn-sm btn-outline-light" href="/logout">Logout</a>
     </div>
   </aside>
+  <?php endif; ?>
   <main class="content flex-grow-1">
     <div class="container">
       <?php include $viewFile; ?>

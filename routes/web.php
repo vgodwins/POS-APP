@@ -52,6 +52,7 @@ $router->any('/vouchers/create', [VoucherController::class, 'create']);
 $router->post('/vouchers/save', [VoucherController::class, 'save']);
 $router->any('/vouchers/edit', [VoucherController::class, 'edit']);
 $router->post('/vouchers/update', [VoucherController::class, 'update']);
+$router->any('/vouchers/view', [VoucherController::class, 'view']);
 $router->any('/vouchers/bulk', [VoucherController::class, 'bulk']);
 $router->post('/vouchers/bulk_save', [VoucherController::class, 'bulkSave']);
 

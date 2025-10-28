@@ -5,6 +5,16 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
 ?>
 <div class="row">
   <div class="col-md-8">
+    <?php if (!empty($lowStock ?? []) ): ?>
+    <div class="alert alert-warning">
+      <strong>Low stock alert:</strong> The following items have stock at or below <?= (int)($lowThreshold ?? (Config::get('defaults')['low_stock_threshold'] ?? 5)) ?>.
+      <div class="mt-2 small">
+        <?php foreach (array_slice(($lowStock ?? []), 0, 8) as $ls): ?>
+          <span class="badge bg-warning text-dark me-2 mb-1"><?= htmlspecialchars($ls['name']) ?> — <?= (int)$ls['stock'] ?></span>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
     <div class="card mb-3">
       <div class="card-header">New Sale</div>
       <div class="card-body">
