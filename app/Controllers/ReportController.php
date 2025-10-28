@@ -8,9 +8,12 @@ use App\Core\DB;
 use App\Models\Expense;
 
 class ReportController {
+    private function ensureOwnerOrAdmin(): void {
+        if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner'))) { Response::redirect('/'); }
+    }
     public function sales(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $this->ensureOwnerOrAdmin();
+        $storeId = Auth::effectiveStoreId() ?? null;
         $pdo = DB::conn();
         // Helper to run aggregate
         $fn = function (string $where, array $params = []) use ($pdo, $storeId) {
@@ -48,8 +51,8 @@ class ReportController {
     }
 
     public function exportCsv(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $this->ensureOwnerOrAdmin();
+        $storeId = Auth::effectiveStoreId() ?? null;
         $pdo = DB::conn();
         $fn = function (string $where, array $params = []) use ($pdo, $storeId) {
             $sql = 'SELECT COALESCE(COUNT(*),0) AS sales_count, COALESCE(SUM(total_amount),0) AS total_amount, COALESCE(SUM(subtotal),0) AS subtotal, COALESCE(SUM(tax_total),0) AS tax_total FROM sales';
@@ -85,8 +88,8 @@ class ReportController {
         ];
     }
     public function filter(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $this->ensureOwnerOrAdmin();
+        $storeId = Auth::effectiveStoreId() ?? null;
         $from = trim($req->body['from'] ?? $req->query['from'] ?? '');
         $to = trim($req->body['to'] ?? $req->query['to'] ?? '');
         $productId = ($req->body['product_id'] ?? $req->query['product_id'] ?? '') !== '' ? (int)($req->body['product_id'] ?? $req->query['product_id'] ?? 0) : null;
@@ -141,5 +144,32 @@ class ReportController {
             'products' => $products,
             'categories' => $categories,
         ]);
+    }
+
+    public function general(Request $req): void {
+        $this->ensureOwnerOrAdmin();
+        $pdo = DB::conn();
+        $summary = [
+            'stores' => 0,
+            'products' => 0,
+            'vouchers' => 0,
+            'customers' => 0,
+            'sales_count' => 0,
+            'revenue' => 0.0,
+            'expenses' => 0.0,
+        ];
+        try {
+            $summary['stores'] = (int)$pdo->query('SELECT COUNT(*) FROM stores')->fetchColumn();
+            $summary['products'] = (int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
+            $summary['vouchers'] = (int)$pdo->query('SELECT COUNT(*) FROM vouchers')->fetchColumn();
+            $summary['customers'] = (int)$pdo->query('SELECT COUNT(*) FROM customers')->fetchColumn();
+            $row = $pdo->query('SELECT COALESCE(COUNT(*),0) AS cnt, COALESCE(SUM(total_amount),0) AS revenue FROM sales')->fetch();
+            $summary['sales_count'] = (int)($row['cnt'] ?? 0);
+            $summary['revenue'] = (float)($row['revenue'] ?? 0.0);
+            $ex = new Expense();
+            $exSum = $ex->summary(null);
+            $summary['expenses'] = (float)($exSum['year'] ?? 0.0);
+        } catch (\Throwable $e) { /* swallow */ }
+        view('reports/general', ['summary' => $summary]);
     }
 }

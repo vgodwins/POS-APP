@@ -10,9 +10,12 @@ use App\Models\Store;
 use App\Models\Customer;
 
 class VoucherController {
+    private function ensureNotCashier(): void {
+        if (!Auth::check() || Auth::hasRole('cashier')) { Response::redirect('/'); }
+    }
     public function index(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $this->ensureNotCashier();
+        $storeId = Auth::effectiveStoreId() ?? null;
         $customerId = ($req->query['customer_id'] ?? '') !== '' ? (int)$req->query['customer_id'] : null;
         $linked = isset($req->query['linked']) ? (string)$req->query['linked'] : null; // '1' or '0'
         $sort = isset($req->query['sort']) ? (string)$req->query['sort'] : null; // 'expiry_asc','expiry_desc','value_desc','value_asc'
@@ -49,19 +52,20 @@ class VoucherController {
         view('vouchers/index', ['vouchers' => $list, 'customers' => $customers, 'selectedCustomerId' => $customerId, 'selectedLinked' => ($linked === '1' || $linked === '0') ? $linked : null, 'selectedSort' => $sort]);
     }
     public function create(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $this->ensureNotCashier();
+        $storeId = Auth::effectiveStoreId() ?? null;
         $customers = [];
         try { $customers = (new Customer())->allByStore((int)$storeId); } catch (\Throwable $e) { $customers = []; }
         view('vouchers/create', ['customers' => $customers]);
     }
     public function save(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { view('vouchers/create', ['error' => 'Invalid session']); return; }
+        if (Auth::isWriteLocked(Auth::effectiveStoreId())) { view('vouchers/create', ['error' => 'Store is locked or outside active hours']); return; }
         $value = (float)($req->body['value'] ?? 0);
         $expiry = trim($req->body['expiry_date'] ?? '');
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $store = $storeId ? (new Store())->find((int)$storeId) : null;
         $currencyCode = $store['currency_code'] ?? (Config::get('defaults')['currency_code'] ?? 'NGN');
         $v = new Voucher();
@@ -78,10 +82,10 @@ class VoucherController {
     }
 
     public function edit(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         $id = (int)($req->query['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/vouchers'); return; }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $v = new Voucher();
         $voucher = $v->find($id);
         if (!$voucher || ($storeId && (int)$voucher['store_id'] !== (int)$storeId)) { Response::redirect('/vouchers'); return; }
@@ -97,10 +101,10 @@ class VoucherController {
     }
 
     public function view(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         $id = (int)($req->query['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/vouchers'); return; }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $v = new Voucher();
         $voucher = null;
         try { $voucher = $v->findWithCustomer($id); } catch (\Throwable $e) { $voucher = $v->find($id); }
@@ -109,12 +113,13 @@ class VoucherController {
     }
 
     public function update(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/vouchers'); return; }
+        if (Auth::isWriteLocked(Auth::effectiveStoreId())) { Response::redirect('/vouchers'); return; }
         $id = (int)($req->body['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/vouchers'); return; }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $v = new Voucher();
         $voucher = $v->find($id);
         if (!$voucher || ($storeId && (int)$voucher['store_id'] !== (int)$storeId)) { Response::redirect('/vouchers'); return; }
@@ -137,15 +142,16 @@ class VoucherController {
     }
 
     public function bulk(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         view('vouchers/bulk');
     }
 
     public function bulkSave(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureNotCashier();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { view('vouchers/bulk', ['error' => 'Invalid session']); return; }
-        $storeId = Auth::user()['store_id'] ?? null;
+        if (Auth::isWriteLocked(Auth::effectiveStoreId())) { view('vouchers/bulk', ['error' => 'Store is locked or outside active hours']); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
         $store = $storeId ? (new Store())->find((int)$storeId) : null;
         $currencyCode = $store['currency_code'] ?? (Config::get('defaults')['currency_code'] ?? 'NGN');
         $count = max(1, (int)($req->body['count'] ?? 1));
@@ -167,7 +173,7 @@ class VoucherController {
         if (!Auth::check()) { Response::json(['ok' => false, 'error' => 'unauthorized'], 401); }
         $code = trim($req->query['code'] ?? '');
         if ($code === '') { Response::json(['ok' => false, 'error' => 'missing_code'], 400); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         try {
             $v = new Voucher();
             $voucher = $v->findByCode($code, $storeId);

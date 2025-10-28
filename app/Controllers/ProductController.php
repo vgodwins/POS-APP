@@ -11,7 +11,7 @@ use App\Models\Category;
 class ProductController {
     public function index(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $categoryId = ($req->query['category_id'] ?? '') !== '' ? (int)$req->query['category_id'] : null;
         $p = new Product();
         $list = $p->all($storeId, $categoryId);
@@ -42,7 +42,7 @@ class ProductController {
     }
     public function create(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
         $cats = (new Category())->allByStore($storeId);
         view('products/create', ['categories' => $cats]);
     }
@@ -50,8 +50,10 @@ class ProductController {
         if (!Auth::check()) { Response::redirect('/'); }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { view('products/create', ['error' => 'Invalid session']); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (Auth::isWriteLocked($storeId)) { view('products/create', ['error' => 'Store is locked or outside active hours']); return; }
         $data = [
-            'store_id' => Auth::user()['store_id'] ?? null,
+            'store_id' => $storeId,
             'name' => trim($req->body['name'] ?? ''),
             'sku' => trim($req->body['sku'] ?? ''),
             'barcode' => trim($req->body['barcode'] ?? ''),
@@ -83,6 +85,8 @@ class ProductController {
         if (!verify_csrf($csrf)) { Response::redirect('/products'); return; }
         $id = (int)($req->body['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/products'); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (Auth::isWriteLocked($storeId)) { Response::redirect('/products'); return; }
         $data = [
             'name' => trim($req->body['name'] ?? ''),
             'sku' => trim($req->body['sku'] ?? ''),
@@ -99,7 +103,8 @@ class ProductController {
     public function uploadCsv(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
         if (($req->method === 'POST') && isset($_FILES['csv']) && $_FILES['csv']['error'] === UPLOAD_ERR_OK) {
-            $storeId = Auth::user()['store_id'] ?? null;
+            $storeId = Auth::effectiveStoreId() ?? null;
+            if (Auth::isWriteLocked($storeId)) { view('products/upload', ['error' => 'Store is locked or outside active hours']); return; }
             $p = new Product();
             $fh = fopen($_FILES['csv']['tmp_name'], 'r');
             // Assume header: name,sku,barcode,price,stock

@@ -3,6 +3,9 @@
   <div>
     <a href="/products/upload" class="btn btn-secondary">Bulk Upload CSV</a>
     <a href="/products/create" class="btn btn-primary">Add Product</a>
+    <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
+    <a href="/categories/create" class="btn btn-outline-secondary">Add New Category</a>
+    <?php endif; ?>
   </div>
 </div>
 <div class="mb-3">

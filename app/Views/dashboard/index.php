@@ -5,15 +5,16 @@ use App\Core\DB;
 $currency = Config::get('defaults')['currency_symbol'] ?? '₦';
 $user = Auth::user();
 $storeName = '';
-if ($user && ($user['store_id'] ?? null)) {
-  try {
+try {
+  $sid = \App\Core\Auth::effectiveStoreId();
+  if ($sid) {
     $pdo = DB::conn();
     $st = $pdo->prepare('SELECT name FROM stores WHERE id = ?');
-    $st->execute([$user['store_id']]);
+    $st->execute([$sid]);
     $storeName = (string)$st->fetchColumn();
-  } catch (\Throwable $e) {
-    // Keep empty store name on DB error
   }
+} catch (\Throwable $e) {
+  // Keep empty store name on DB error
 }
 ?>
 <div class="mb-3 text-center">
@@ -21,6 +22,25 @@ if ($user && ($user['store_id'] ?? null)) {
   <div class="text-muted">Dashboard</div>
   <hr>
 </div>
+<?php if (\App\Core\Auth::hasRole('admin')): ?>
+<div class="mb-3">
+  <form method="post" action="/admin/store/switch" class="d-flex align-items-center gap-2">
+    <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+    <label class="form-label mb-0">View Store</label>
+    <select name="store_id" class="form-select" style="max-width: 320px;">
+      <option value="">My Store (Default)</option>
+      <?php foreach (($stores ?? []) as $s): ?>
+        <option value="<?= (int)$s['id'] ?>" <?= (!empty($selectedStoreId) && (int)$selectedStoreId === (int)$s['id']) ? 'selected' : '' ?>>
+          <?= htmlspecialchars($s['name']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
+    <button class="btn btn-outline-primary" type="submit">Switch</button>
+  </form>
+  <small class="text-muted">Switch context to analyze a different shop.</small>
+  <hr>
+  </div>
+<?php endif; ?>
 <div class="row">
   <div class="col-md-7">
     <div class="card mb-3">

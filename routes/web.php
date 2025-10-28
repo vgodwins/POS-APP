@@ -10,6 +10,8 @@ use App\Controllers\ReportController;
 use App\Controllers\ExpenseController;
 use App\Controllers\SettingsController;
 use App\Controllers\UserController;
+use App\Controllers\CustomerController;
+use App\Controllers\CategoryController;
 
 /* @var $router Router */
 
@@ -26,6 +28,8 @@ $router->any('/password/reset', [AuthController::class, 'reset']);
 $router->post('/password/do_reset', [AuthController::class, 'doReset']);
 
 $router->get('/dashboard', [DashboardController::class, 'index']);
+// Admin store context switcher
+$router->post('/admin/store/switch', [DashboardController::class, 'switchStore']);
 
 // Store management (Admin)
 $router->get('/stores', [StoreController::class, 'index']);
@@ -69,6 +73,8 @@ $router->get('/sales/invoice', [SaleController::class, 'invoice']);
 $router->get('/reports/sales', [ReportController::class, 'sales']);
 $router->any('/reports/sales/filter', [ReportController::class, 'filter']);
 $router->get('/reports/sales/export.csv', [ReportController::class, 'exportCsv']);
+// General reports
+$router->get('/reports/general', [ReportController::class, 'general']);
 
 $router->get('/expenses', [ExpenseController::class, 'index']);
 $router->any('/expenses/create', [ExpenseController::class, 'create']);
@@ -84,3 +90,11 @@ $router->post('/settings/clear_data', [SettingsController::class, 'clearData']);
 // Product editing
 $router->any('/products/edit', [ProductController::class, 'edit']);
 $router->post('/products/update', [ProductController::class, 'update']);
+
+// Customers
+$router->any('/customers/create', [CustomerController::class, 'create']);
+$router->post('/customers/save', [CustomerController::class, 'save']);
+
+// Categories
+$router->any('/categories/create', [CategoryController::class, 'create']);
+$router->post('/categories/save', [CategoryController::class, 'save']);

@@ -1,6 +1,9 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Users</h3>
-  <a href="/users/create" class="btn btn-primary">Add User</a>
+  <div class="btn-group">
+    <a href="/users/create" class="btn btn-primary">Add User</a>
+    <a href="/customers/create" class="btn btn-outline-secondary">Add New Customer</a>
+  </div>
 </div>
 <?php if (!empty($error)): ?>
   <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>

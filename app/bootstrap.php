@@ -103,6 +103,40 @@ namespace App\Core {
             if (!$u) return false;
             return in_array($role, $u['roles'] ?? [], true);
         }
+        public static function effectiveStoreId(): ?int {
+            $u = self::user();
+            if (!$u) return null;
+            // Admin can switch context to view another store
+            if (self::hasRole('admin') && isset($_SESSION['admin_view_store_id']) && (int)$_SESSION['admin_view_store_id'] > 0) {
+                return (int)$_SESSION['admin_view_store_id'];
+            }
+            return isset($u['store_id']) ? (int)$u['store_id'] : null;
+        }
+        public static function isWriteLocked(?int $storeId): bool {
+            if (!$storeId) return false;
+            try {
+                $pdo = DB::conn();
+                $st = $pdo->prepare('SELECT locked, active_hours_start, active_hours_end FROM stores WHERE id = ?');
+                $st->execute([$storeId]);
+                $row = $st->fetch();
+                if (!$row) return false;
+                $locked = (int)($row['locked'] ?? 0) === 1;
+                if ($locked) return true;
+                $start = $row['active_hours_start'] ?? null;
+                $end = $row['active_hours_end'] ?? null;
+                if ($start && $end) {
+                    // Compare in store's local time; assume server time for simplicity
+                    $now = strtotime(date('H:i'));
+                    $s = strtotime($start);
+                    $e = strtotime($end);
+                    if ($s === false || $e === false) { return false; }
+                    // Handle overnight windows (e.g., 20:00 - 06:00)
+                    $inWindow = $s <= $e ? ($now >= $s && $now <= $e) : ($now >= $s || $now <= $e);
+                    return !$inWindow; // locked when outside active window
+                }
+            } catch (\Throwable $e) { /* ignore DB errors */ }
+            return false;
+        }
     }
 }
 

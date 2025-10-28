@@ -10,17 +10,20 @@ use App\Core\Config;
 class SettingsController {
     public function index(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        $sid = Auth::user()['store_id'] ?? null;
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); return; }
+        $sid = Auth::effectiveStoreId() ?? null;
         if (!$sid) { view('settings/index', ['error' => 'No store associated']); return; }
         $store = (new Store())->find((int)$sid);
         view('settings/index', ['store' => $store]);
     }
     public function save(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); return; }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { $this->index($req); return; }
-        $sid = Auth::user()['store_id'] ?? null;
+        $sid = Auth::effectiveStoreId() ?? null;
         if (!$sid) { $this->index($req); return; }
+        if (Auth::isWriteLocked($sid)) { $store = (new Store())->find((int)$sid); view('settings/index', ['store' => $store, 'error' => 'Store is locked or outside active hours']); return; }
         $data = [
             'name' => trim($req->body['name'] ?? ''),
             'currency_code' => trim($req->body['currency_code'] ?? (Config::get('defaults')['currency_code'] ?? 'NGN')),
@@ -60,10 +63,12 @@ class SettingsController {
 
     public function uploadLogo(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); return; }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/settings'); return; }
-        $sid = Auth::user()['store_id'] ?? null;
+        $sid = Auth::effectiveStoreId() ?? null;
         if (!$sid) { Response::redirect('/settings'); return; }
+        if (Auth::isWriteLocked($sid)) { Response::redirect('/settings'); return; }
         if (!isset($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
             Response::redirect('/settings'); return;
         }
@@ -90,8 +95,9 @@ class SettingsController {
         if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); return; }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/settings'); return; }
-        $sid = Auth::user()['store_id'] ?? null;
+        $sid = Auth::effectiveStoreId() ?? null;
         if (!$sid) { Response::redirect('/settings'); return; }
+        if (Auth::isWriteLocked($sid)) { $store = (new Store())->find((int)$sid); view('settings/index', ['store' => $store, 'error' => 'Store is locked or outside active hours']); return; }
         // Environment safeguard: disable destructive action in production
         try {
             $appCfg = Config::get('app') ?? [];

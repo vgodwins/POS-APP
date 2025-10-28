@@ -71,15 +71,24 @@ if (Auth::check()) {
       <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
       <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
+      <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
+      <?php endif; ?>
       <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
       <?php if (\App\Core\Auth::hasRole('admin')): ?>
       <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
       <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
       <?php endif; ?>
+      <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
+      <?php endif; ?>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+      <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+      <?php endif; ?>
+      <?php if (\App\Core\Auth::hasRole('admin')): ?>
+      <li class="nav-item"><a class="nav-link" href="/reports/general">General Reports</a></li>
+      <?php endif; ?>
     </ul>
     <div class="mt-4 text-white-50 small">
       <div class="mb-2">Currency: <span class="currency"><?= htmlspecialchars($currencySymbol) ?></span></div>

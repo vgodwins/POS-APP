@@ -15,7 +15,7 @@ class SaleController {
         if (!Auth::check()) { Response::redirect('/'); }
         if (!(Auth::hasRole('cashier') || Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); }
         $p = new Product();
-        $products = $p->all(Auth::user()['store_id'] ?? null);
+        $products = $p->all(Auth::effectiveStoreId() ?? null);
         // Filter POS products to valid or returned only and exclude zero stock
         $products = array_values(array_filter($products, function ($pr) {
             $status = strtolower($pr['status'] ?? 'valid');
@@ -24,7 +24,7 @@ class SaleController {
         }));
         $store = null;
         try {
-            $sid = Auth::user()['store_id'] ?? null;
+            $sid = Auth::effectiveStoreId() ?? null;
             if ($sid) { $store = (new Store())->find((int)$sid); }
         } catch (\Throwable $e) { $store = null; }
         // Determine low-stock list for alert
@@ -40,7 +40,8 @@ class SaleController {
         if (!(Auth::hasRole('cashier') || Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/dashboard'); }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/pos'); return; }
-        $storeId = Auth::user()['store_id'] ?? null;
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (Auth::isWriteLocked($storeId)) { Response::redirect('/pos'); return; }
         $items = $req->body['items'] ?? [];
         $payments = $req->body['payments'] ?? [];
         $voucherCode = trim($req->body['voucher_code'] ?? '');
