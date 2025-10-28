@@ -59,6 +59,10 @@ $router->post('/vouchers/update', [VoucherController::class, 'update']);
 $router->any('/vouchers/view', [VoucherController::class, 'view']);
 $router->any('/vouchers/bulk', [VoucherController::class, 'bulk']);
 $router->post('/vouchers/bulk_save', [VoucherController::class, 'bulkSave']);
+// Voucher cards print and verification
+$router->get('/vouchers/print_cards', [VoucherController::class, 'printCards']);
+$router->get('/vouchers/verify', [VoucherController::class, 'verifyPage']);
+$router->get('/vouchers/scan', [VoucherController::class, 'scan']);
 
 // Voucher API
 $router->get('/vouchers/validate', [VoucherController::class, 'validate']);

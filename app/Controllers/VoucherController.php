@@ -161,12 +161,127 @@ class VoucherController {
         $v = new Voucher();
         try {
             $codes = $v->bulkCreate((int)$storeId, $value, $currencyCode, $expiry, $count, $prefix);
-            view('vouchers/bulk', ['success' => 'Generated ' . count($codes) . ' vouchers', 'codes' => $codes]);
+            // Store last bulk codes in session to avoid long URLs
+            $_SESSION['last_bulk_codes'] = $codes;
+            Response::redirect('/vouchers/print_cards');
             return;
         } catch (\Throwable $e) {
             view('vouchers/bulk', ['error' => 'Failed to generate vouchers']);
             return;
         }
+    }
+
+    public function printCards(Request $req): void {
+        $this->ensureNotCashier();
+        $codesParam = trim($req->query['codes'] ?? '');
+        $codes = [];
+        if ($codesParam !== '') {
+            $codes = array_values(array_filter(array_map('trim', explode(',', $codesParam)), fn($c) => $c !== ''));
+        } elseif (!empty($_SESSION['last_bulk_codes']) && is_array($_SESSION['last_bulk_codes'])) {
+            $codes = $_SESSION['last_bulk_codes'];
+        }
+        // Accept filters from vouchers list when codes are not explicitly provided
+        $customerId = ($req->query['customer_id'] ?? '') !== '' ? (int)$req->query['customer_id'] : null;
+        $linked = isset($req->query['linked']) ? (string)$req->query['linked'] : null; // '1' or '0'
+        $sort = isset($req->query['sort']) ? (string)$req->query['sort'] : null;
+        $search = trim($req->query['q'] ?? '');
+        $storeId = Auth::effectiveStoreId() ?? null;
+        $store = $storeId ? (new Store())->find((int)$storeId) : null;
+        $cards = [];
+        $v = new Voucher();
+        if (!empty($codes)) {
+            foreach ($codes as $code) {
+                try {
+                    $row = $v->findByCode($code, $storeId);
+                    if ($row) {
+                        $customer = null;
+                        if (!empty($row['customer_id'])) {
+                            try { $customer = (new Customer())->find((int)$row['customer_id']); } catch (\Throwable $e) { $customer = null; }
+                        }
+                        $cards[] = ['voucher' => $row, 'customer' => $customer];
+                    }
+                } catch (\Throwable $e) { /* swallow */ }
+            }
+        } else {
+            // Build from filters
+            $list = [];
+            try {
+                $list = $v->allWithCustomer($storeId, $customerId, ($linked === '1' || $linked === '0') ? $linked : null, $sort);
+            } catch (\Throwable $e) {
+                $list = $v->all($storeId);
+                if ($customerId !== null) { $list = array_values(array_filter($list, fn($row) => (int)($row['customer_id'] ?? 0) === $customerId)); }
+                if ($linked === '1') { $list = array_values(array_filter($list, fn($row) => ($row['customer_id'] ?? null) !== null)); }
+                if ($linked === '0') { $list = array_values(array_filter($list, fn($row) => ($row['customer_id'] ?? null) === null)); }
+                if ($sort) {
+                    if ($sort === 'expiry_asc' || $sort === 'expiry_desc') {
+                        usort($list, function($a, $b) use ($sort) {
+                            $ea = strtotime($a['expiry_date'] ?? '1970-01-01');
+                            $eb = strtotime($b['expiry_date'] ?? '1970-01-01');
+                            $cmp = $ea <=> $eb;
+                            return $sort === 'expiry_asc' ? $cmp : -$cmp;
+                        });
+                    } elseif ($sort === 'value_desc' || $sort === 'value_asc') {
+                        usort($list, function($a, $b) use ($sort) {
+                            $va = (float)($a['value'] ?? 0);
+                            $vb = (float)($b['value'] ?? 0);
+                            $cmp = $va <=> $vb;
+                            return $sort === 'value_asc' ? $cmp : -$cmp;
+                        });
+                    }
+                }
+            }
+            if ($search !== '') {
+                $q = strtolower($search);
+                $list = array_values(array_filter($list, function($row) use ($q) {
+                    $txt = strtolower(($row['code'] ?? '') . ' ' . (string)($row['value'] ?? '') . ' ' . ($row['currency_code'] ?? '') . ' ' . ($row['customer_name'] ?? ''));
+                    return strpos($txt, $q) !== false;
+                }));
+            }
+            foreach ($list as $row) {
+                $customer = null;
+                if (!empty($row['customer_id'])) {
+                    // Prefer names from join if available
+                    if (isset($row['customer_name']) || isset($row['customer_phone']) || isset($row['customer_email'])) {
+                        $customer = [
+                            'name' => $row['customer_name'] ?? null,
+                            'phone' => $row['customer_phone'] ?? null,
+                            'email' => $row['customer_email'] ?? null,
+                        ];
+                    } else {
+                        try { $customer = (new Customer())->find((int)$row['customer_id']); } catch (\Throwable $e) { $customer = null; }
+                    }
+                }
+                $cards[] = ['voucher' => $row, 'customer' => $customer];
+            }
+        }
+        view('vouchers/print_cards', ['cards' => $cards, 'store' => $store]);
+    }
+
+    public function verifyPage(Request $req): void {
+        $code = trim($req->query['code'] ?? '');
+        $storeId = Auth::check() ? (Auth::effectiveStoreId() ?? null) : null;
+        $status = ['ok' => false, 'message' => 'Missing code'];
+        $voucher = null;
+        if ($code !== '') {
+            try {
+                $v = new Voucher();
+                $voucher = $v->findByCode($code, $storeId);
+                if ($voucher) {
+                    $valid = strtotime($voucher['expiry_date']) >= strtotime(date('Y-m-d')) && $voucher['status'] === 'active';
+                    $status = $valid ? ['ok' => true, 'message' => 'Voucher is valid'] : ['ok' => false, 'message' => 'Voucher is expired or already used'];
+                } else {
+                    $status = ['ok' => false, 'message' => 'Voucher not found'];
+                }
+            } catch (\Throwable $e) {
+                $status = ['ok' => false, 'message' => 'Server error'];
+            }
+        }
+        view('vouchers/verify', ['status' => $status, 'voucher' => $voucher]);
+    }
+
+    public function scan(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); return; }
+        view('vouchers/scan');
     }
 
     public function validate(Request $req): void {

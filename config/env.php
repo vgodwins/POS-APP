@@ -2,8 +2,8 @@
 // Local development config
 return [
     'app' => [
-        'name' => 'Mall POS',
-        'url' => 'http://127.0.0.1:8000',
+        'name' => 'MavicFy',
+        'url' => 'http://127.0.0.1:8001',
         'timezone' => 'Africa/Lagos',
         'env' => 'development',
     ],

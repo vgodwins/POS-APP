@@ -37,11 +37,14 @@
     <input type="text" id="voucherSearch" class="form-control" placeholder="Search code or value" style="max-width: 240px;">
     <a href="/vouchers/create" class="btn btn-primary">Create Voucher</a>
     <a href="/vouchers/bulk" class="btn btn-outline-primary">Bulk Generate</a>
+    <button type="button" id="printCardsBtn" class="btn btn-outline-secondary">Print Cards</button>
+    <button type="button" id="printSelectedBtn" class="btn btn-secondary">Print Selected</button>
   </div>
 </div>
 <table class="table table-striped">
   <thead>
     <tr>
+      <th><input type="checkbox" id="selectAll" title="Select all"></th>
       <th>Code</th>
       <th>Value</th>
       <th>Currency</th>
@@ -54,6 +57,7 @@
   <tbody>
     <?php foreach (($vouchers ?? []) as $v): ?>
       <tr>
+        <td><input type="checkbox" class="voucherSelect" data-code="<?= htmlspecialchars($v['code']) ?>"></td>
         <td><?= htmlspecialchars($v['code']) ?></td>
         <td><?= number_format((float)$v['value'], 2) ?></td>
         <td><?= htmlspecialchars($v['currency_code']) ?></td>
@@ -83,6 +87,7 @@
         <td>
           <a href="/vouchers/edit?id=<?= (int)$v['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
           <a href="/vouchers/view?id=<?= (int)$v['id'] ?>" class="btn btn-sm btn-outline-secondary">View</a>
+          <a href="/vouchers/print_cards?codes=<?= urlencode($v['code']) ?>" class="btn btn-sm btn-outline-secondary">Print</a>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -146,5 +151,35 @@
       }
     }
     window.location.href = url.toString();
+  });
+
+  // Hook filters to Print Cards page
+  const printBtn = document.getElementById('printCardsBtn');
+  printBtn.addEventListener('click', () => {
+    const url = new URL('/vouchers/print_cards', window.location.origin);
+    const cid = customerFilter.value;
+    const linkedVal = linkFilter.value;
+    const sortVal = sortFilter.value;
+    const q = (vSearch.value || '').trim();
+    if (cid) { url.searchParams.set('customer_id', cid); }
+    if (linkedVal === '1' || linkedVal === '0') { url.searchParams.set('linked', linkedVal); }
+    if (sortVal) { url.searchParams.set('sort', sortVal); }
+    if (q) { url.searchParams.set('q', q); }
+    window.location.href = url.toString();
+  });
+
+  // Print selected via checkboxes
+  const printSelectedBtn = document.getElementById('printSelectedBtn');
+  const selectAll = document.getElementById('selectAll');
+  printSelectedBtn.addEventListener('click', () => {
+    const codes = Array.from(document.querySelectorAll('.voucherSelect:checked')).map(cb => cb.getAttribute('data-code'));
+    if (codes.length === 0) { alert('Select at least one voucher to print'); return; }
+    const url = new URL('/vouchers/print_cards', window.location.origin);
+    url.searchParams.set('codes', codes.join(','));
+    window.location.href = url.toString();
+  });
+  selectAll.addEventListener('change', () => {
+    const checked = selectAll.checked;
+    document.querySelectorAll('.voucherSelect').forEach(cb => { cb.checked = checked; });
   });
 </script>

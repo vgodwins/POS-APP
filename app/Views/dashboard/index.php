@@ -41,6 +41,12 @@ try {
   <hr>
   </div>
 <?php endif; ?>
+<?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
+<div class="mb-3 d-flex gap-2">
+  <a class="btn btn-success" href="/customers/create">Add Customer</a>
+  <a class="btn btn-outline-primary" href="/vouchers/scan">Scan Voucher</a>
+</div>
+<?php endif; ?>
 <div class="row">
   <div class="col-md-7">
     <div class="card mb-3">

@@ -33,6 +33,7 @@ if (Auth::check()) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= htmlspecialchars($appName) ?></title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -72,6 +73,9 @@ if (Auth::check()) {
       <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
       <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
+      <li class="nav-item"><a class="nav-link" href="/customers/create">Add Customer</a></li>
+      <?php endif; ?>
+      <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
       <?php endif; ?>
       <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
@@ -82,6 +86,7 @@ if (Auth::check()) {
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
       <?php endif; ?>
+      <li class="nav-item"><a class="nav-link" href="/vouchers/scan">Scan Voucher</a></li>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
