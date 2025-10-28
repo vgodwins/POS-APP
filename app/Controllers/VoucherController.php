@@ -185,6 +185,7 @@ class VoucherController {
         $linked = isset($req->query['linked']) ? (string)$req->query['linked'] : null; // '1' or '0'
         $sort = isset($req->query['sort']) ? (string)$req->query['sort'] : null;
         $search = trim($req->query['q'] ?? '');
+        $showAmount = (($req->query['show_amount'] ?? '') !== '') ? (bool)$req->query['show_amount'] : true;
         $storeId = Auth::effectiveStoreId() ?? null;
         $store = $storeId ? (new Store())->find((int)$storeId) : null;
         $cards = [];
@@ -254,7 +255,7 @@ class VoucherController {
                 $cards[] = ['voucher' => $row, 'customer' => $customer];
             }
         }
-        view('vouchers/print_cards', ['cards' => $cards, 'store' => $store]);
+        view('vouchers/print_cards', ['cards' => $cards, 'store' => $store, 'showAmount' => $showAmount]);
     }
 
     public function verifyPage(Request $req): void {

@@ -37,7 +37,8 @@
     <input type="text" id="voucherSearch" class="form-control" placeholder="Search code or value" style="max-width: 240px;">
     <a href="/vouchers/create" class="btn btn-primary">Create Voucher</a>
     <a href="/vouchers/bulk" class="btn btn-outline-primary">Bulk Generate</a>
-    <button type="button" id="printCardsBtn" class="btn btn-outline-secondary">Print Cards</button>
+    <button type="button" id="printCardsBtn" class="btn btn-outline-secondary">Print Cards (with amount)</button>
+    <button type="button" id="printCardsNoAmtBtn" class="btn btn-outline-secondary">Print Cards (no amount)</button>
     <button type="button" id="printSelectedBtn" class="btn btn-secondary">Print Selected</button>
   </div>
 </div>
@@ -165,6 +166,21 @@
     if (linkedVal === '1' || linkedVal === '0') { url.searchParams.set('linked', linkedVal); }
     if (sortVal) { url.searchParams.set('sort', sortVal); }
     if (q) { url.searchParams.set('q', q); }
+    url.searchParams.set('show_amount', '1');
+    window.location.href = url.toString();
+  });
+  const printNoAmtBtn = document.getElementById('printCardsNoAmtBtn');
+  printNoAmtBtn.addEventListener('click', () => {
+    const url = new URL('/vouchers/print_cards', window.location.origin);
+    const cid = customerFilter.value;
+    const linkedVal = linkFilter.value;
+    const sortVal = sortFilter.value;
+    const q = (vSearch.value || '').trim();
+    if (cid) { url.searchParams.set('customer_id', cid); }
+    if (linkedVal === '1' || linkedVal === '0') { url.searchParams.set('linked', linkedVal); }
+    if (sortVal) { url.searchParams.set('sort', sortVal); }
+    if (q) { url.searchParams.set('q', q); }
+    url.searchParams.set('show_amount', '0');
     window.location.href = url.toString();
   });
 

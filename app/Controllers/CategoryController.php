@@ -13,6 +13,14 @@ class CategoryController {
         }
     }
 
+    public function index(Request $req): void {
+        $this->ensureOwnerOrAdmin();
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (!$storeId) { view('categories/index', ['categories' => [], 'error' => 'Missing store context']); return; }
+        $cats = (new Category())->allByStore($storeId);
+        view('categories/index', ['categories' => $cats]);
+    }
+
     public function create(Request $req): void {
         $this->ensureOwnerOrAdmin();
         view('categories/create', ['error' => null]);
@@ -31,5 +39,52 @@ class CategoryController {
         if (!$storeId) { view('categories/create', ['error' => 'Missing store context']); return; }
         (new Category())->create(['store_id' => $storeId, 'name' => $name]);
         Response::redirect('/products');
+    }
+
+    public function edit(Request $req): void {
+        $this->ensureOwnerOrAdmin();
+        $id = (int)($req->query['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/categories'); return; }
+        $c = (new Category())->find($id);
+        if (!$c) { Response::redirect('/categories'); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if ($storeId && (int)($c['store_id'] ?? 0) !== (int)$storeId) { Response::redirect('/categories'); return; }
+        view('categories/edit', ['category' => $c, 'error' => null]);
+    }
+
+    public function update(Request $req): void {
+        $this->ensureOwnerOrAdmin();
+        $csrf = $req->body['csrf'] ?? null;
+        if (!\verify_csrf($csrf)) { Response::redirect('/categories'); return; }
+        $id = (int)($req->body['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/categories'); return; }
+        $name = trim($req->body['name'] ?? '');
+        if ($name === '') { Response::redirect('/categories'); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (Auth::isWriteLocked($storeId)) { Response::redirect('/categories'); return; }
+        $cat = new Category();
+        $existing = $cat->find($id);
+        if (!$existing) { Response::redirect('/categories'); return; }
+        if ($storeId && (int)($existing['store_id'] ?? 0) !== (int)$storeId) { Response::redirect('/categories'); return; }
+        $cat->update($id, ['name' => $name]);
+        \flash('Category updated', 'success');
+        Response::redirect('/categories');
+    }
+
+    public function delete(Request $req): void {
+        $this->ensureOwnerOrAdmin();
+        $csrf = $req->body['csrf'] ?? null;
+        if (!\verify_csrf($csrf)) { Response::redirect('/categories'); return; }
+        $id = (int)($req->body['id'] ?? 0);
+        if ($id <= 0) { Response::redirect('/categories'); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        if (Auth::isWriteLocked($storeId)) { Response::redirect('/categories'); return; }
+        $cat = new Category();
+        $existing = $cat->find($id);
+        if ($existing && (!$storeId || (int)($existing['store_id'] ?? 0) === (int)$storeId)) {
+            $cat->delete($id);
+            \flash('Category deleted', 'success');
+        }
+        Response::redirect('/categories');
     }
 }

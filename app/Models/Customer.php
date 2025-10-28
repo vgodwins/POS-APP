@@ -23,4 +23,23 @@ class Customer extends BaseModel {
         $row = $st->fetch();
         return $row ?: null;
     }
+
+    public function update(int $id, array $data): void {
+        $fields = [
+            'name' => $data['name'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'email' => $data['email'] ?? null,
+        ];
+        $set = []; $params = ['id' => $id];
+        foreach ($fields as $k => $v) { if ($v !== null) { $set[] = "$k = :$k"; $params[$k] = $v; } }
+        if (!$set) return;
+        $sql = 'UPDATE customers SET ' . implode(', ', $set) . ' WHERE id = :id';
+        $st = $this->db->prepare($sql);
+        $st->execute($params);
+    }
+
+    public function delete(int $id): void {
+        $st = $this->db->prepare('DELETE FROM customers WHERE id = ?');
+        $st->execute([$id]);
+    }
 }

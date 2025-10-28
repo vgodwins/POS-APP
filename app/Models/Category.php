@@ -27,5 +27,9 @@ class Category extends BaseModel {
         $st = $this->db->prepare($sql);
         $st->execute($params);
     }
-}
 
+    public function delete(int $id): void {
+        $st = $this->db->prepare('DELETE FROM categories WHERE id = ?');
+        $st->execute([$id]);
+    }
+}

@@ -181,4 +181,15 @@ namespace {
     function verify_csrf(?string $token): bool {
         return isset($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], (string)$token);
     }
+
+    // Flash messaging helpers
+    function flash(string $message, string $type = 'info'): void {
+        if (!isset($_SESSION['flash']) || !is_array($_SESSION['flash'])) { $_SESSION['flash'] = []; }
+        $_SESSION['flash'][] = ['message' => $message, 'type' => $type];
+    }
+    function flash_messages(): array {
+        $msgs = $_SESSION['flash'] ?? [];
+        unset($_SESSION['flash']);
+        return is_array($msgs) ? $msgs : [];
+    }
 }

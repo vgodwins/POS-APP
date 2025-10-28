@@ -49,6 +49,8 @@ $router->get('/products', [ProductController::class, 'index']);
 $router->any('/products/create', [ProductController::class, 'create']);
 $router->post('/products/save', [ProductController::class, 'save']);
 $router->any('/products/upload', [ProductController::class, 'uploadCsv']);
+// Inventory export
+$router->get('/products/export.csv', [ProductController::class, 'exportCsv']);
 
 // Vouchers
 $router->get('/vouchers', [VoucherController::class, 'index']);
@@ -96,9 +98,17 @@ $router->any('/products/edit', [ProductController::class, 'edit']);
 $router->post('/products/update', [ProductController::class, 'update']);
 
 // Customers
+$router->get('/customers', [CustomerController::class, 'index']);
 $router->any('/customers/create', [CustomerController::class, 'create']);
 $router->post('/customers/save', [CustomerController::class, 'save']);
+$router->any('/customers/edit', [CustomerController::class, 'edit']);
+$router->post('/customers/update', [CustomerController::class, 'update']);
+$router->post('/customers/delete', [CustomerController::class, 'delete']);
 
 // Categories
+$router->get('/categories', [CategoryController::class, 'index']);
 $router->any('/categories/create', [CategoryController::class, 'create']);
-$router->post('/categories/save', [CategoryController::class, 'save']);
+ $router->post('/categories/save', [CategoryController::class, 'save']);
+ $router->any('/categories/edit', [CategoryController::class, 'edit']);
+ $router->post('/categories/update', [CategoryController::class, 'update']);
+ $router->post('/categories/delete', [CategoryController::class, 'delete']);

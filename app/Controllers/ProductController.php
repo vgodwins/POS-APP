@@ -40,6 +40,40 @@ class ProductController {
             'lowThreshold' => $threshold,
         ]);
     }
+
+    public function exportCsv(Request $req): void {
+        if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/products'); return; }
+        $storeId = Auth::effectiveStoreId() ?? null;
+        $categoryId = ($req->query['category_id'] ?? '') !== '' ? (int)$req->query['category_id'] : null;
+        $p = new Product();
+        $list = $p->all($storeId, $categoryId);
+        $catMap = [];
+        try {
+            $cats = (new Category())->allByStore($storeId ?? 0);
+            foreach ($cats as $c) { $catMap[(int)($c['id'] ?? 0)] = (string)($c['name'] ?? ''); }
+        } catch (\Throwable $e) { /* ignore */ }
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="inventory_export.csv"');
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Name','SKU','Barcode','Price','Stock','Status','Category','Cost Price','Tax Rate']);
+        foreach ($list as $r) {
+            $row = [
+                (string)($r['name'] ?? ''),
+                (string)($r['sku'] ?? ''),
+                (string)($r['barcode'] ?? ''),
+                (string)($r['price'] ?? ''),
+                (string)($r['stock'] ?? ''),
+                (string)($r['status'] ?? ''),
+                (string)($catMap[(int)($r['category_id'] ?? 0)] ?? ''),
+                (string)($r['cost_price'] ?? ''),
+                (string)($r['tax_rate'] ?? ''),
+            ];
+            fputcsv($out, $row);
+        }
+        fclose($out);
+        exit;
+    }
     public function create(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
         $storeId = Auth::effectiveStoreId() ?? null;

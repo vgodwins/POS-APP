@@ -94,6 +94,7 @@ class ReportController {
         $to = trim($req->body['to'] ?? $req->query['to'] ?? '');
         $productId = ($req->body['product_id'] ?? $req->query['product_id'] ?? '') !== '' ? (int)($req->body['product_id'] ?? $req->query['product_id'] ?? 0) : null;
         $categoryId = ($req->body['category_id'] ?? $req->query['category_id'] ?? '') !== '' ? (int)($req->body['category_id'] ?? $req->query['category_id'] ?? 0) : null;
+        $voucherOnly = (($req->body['voucher_only'] ?? $req->query['voucher_only'] ?? '') !== '') ? (bool)($req->body['voucher_only'] ?? $req->query['voucher_only']) : false;
         $pdo = DB::conn();
         // Base conditions
         $conds = [];
@@ -102,6 +103,7 @@ class ReportController {
         if ($from !== '') { $conds[] = 'DATE(s.created_at) >= :from'; $params['from'] = $from; }
         if ($to !== '') { $conds[] = 'DATE(s.created_at) <= :to'; $params['to'] = $to; }
         $join = '';
+        $joinPayments = '';
         if ($productId || $categoryId) {
             $join = 'INNER JOIN sale_items si ON si.sale_id = s.id';
             if ($productId) { $conds[] = 'si.product_id = :pid'; $params['pid'] = $productId; }
@@ -112,15 +114,19 @@ class ReportController {
         } else {
             $join = 'LEFT JOIN sale_items si ON si.sale_id = s.id';
         }
+        if ($voucherOnly) {
+            // Restrict to sales that include a voucher payment
+            $joinPayments = ' INNER JOIN payments pm ON pm.sale_id = s.id AND pm.method = "voucher"';
+        }
         $where = $conds ? (' WHERE ' . implode(' AND ', $conds)) : '';
         // Revenue and subtotal/tax
-        $sqlAgg = 'SELECT COALESCE(SUM(s.total_amount),0) AS revenue, COALESCE(SUM(s.subtotal),0) AS subtotal, COALESCE(SUM(s.tax_total),0) AS tax_total FROM sales s ' . $join . $where;
+        $sqlAgg = 'SELECT COALESCE(SUM(s.total_amount),0) AS revenue, COALESCE(SUM(s.subtotal),0) AS subtotal, COALESCE(SUM(s.tax_total),0) AS tax_total FROM sales s ' . $join . $joinPayments . $where;
         $st = $pdo->prepare($sqlAgg); $st->execute($params);
         $summary = $st->fetch() ?: ['revenue'=>0,'subtotal'=>0,'tax_total'=>0];
         // Profit approx: sum((si.price - p.cost_price) * si.qty)
         $sqlProfit = 'SELECT COALESCE(SUM((si.price - COALESCE(p.cost_price,0)) * si.qty),0) AS profit
                       FROM sales s INNER JOIN sale_items si ON si.sale_id = s.id
-                      LEFT JOIN products p ON p.id = si.product_id' . $where;
+                      LEFT JOIN products p ON p.id = si.product_id' . $joinPayments . $where;
         $st2 = $pdo->prepare($sqlProfit); $st2->execute($params);
         $profit = (float)($st2->fetchColumn() ?: 0);
         // Products list for filter UI
@@ -140,7 +146,7 @@ class ReportController {
         view('reports/filter', [
             'summary' => $summary,
             'profit' => $profit,
-            'filters' => ['from' => $from, 'to' => $to, 'product_id' => $productId, 'category_id' => $categoryId],
+            'filters' => ['from' => $from, 'to' => $to, 'product_id' => $productId, 'category_id' => $categoryId, 'voucher_only' => $voucherOnly],
             'products' => $products,
             'categories' => $categories,
         ]);

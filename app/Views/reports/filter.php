@@ -6,6 +6,7 @@ $from = $filters['from'] ?? '';
 $to = $filters['to'] ?? '';
 $pid = $filters['product_id'] ?? '';
 $cid = $filters['category_id'] ?? '';
+$voucherOnly = !empty($filters['voucher_only']);
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Filter Sales Report</h3>
@@ -39,6 +40,12 @@ $cid = $filters['category_id'] ?? '';
             <option value="<?= (int)$p['id'] ?>" <?= ((int)$pid) === ((int)$p['id']) ? 'selected' : '' ?>><?= htmlspecialchars($p['name']) ?></option>
           <?php endforeach; ?>
         </select>
+      </div>
+      <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="voucherOnly" name="voucher_only" value="1" <?= $voucherOnly ? 'checked' : '' ?>>
+          <label class="form-check-label" for="voucherOnly">Voucher-only sales</label>
+        </div>
       </div>
       <div class="col-md-2 d-flex align-items-end">
         <button class="btn btn-primary" type="submit">Apply</button>

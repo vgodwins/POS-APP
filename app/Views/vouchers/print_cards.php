@@ -3,6 +3,7 @@ use App\Core\Config;
 $host = Config::get('app')['url'] ?? '';
 $storeName = $store['name'] ?? '';
 $logoUrl = $store['logo_url'] ?? '';
+$showAmount = isset($showAmount) ? (bool)$showAmount : true;
 ?>
 <style>
   @media print {
@@ -44,7 +45,9 @@ $logoUrl = $store['logo_url'] ?? '';
       <div class="voucher-field"><strong>Customer:</strong> <?= htmlspecialchars($c['name'] ?? '—') ?></div>
       <div class="voucher-field"><strong>Code:</strong> <span class="voucher-code"><?= htmlspecialchars($code) ?></span></div>
       <div class="voucher-field"><strong>Expiry:</strong> <?= htmlspecialchars($v['expiry_date'] ?? '') ?></div>
-      <div class="voucher-field"><strong>Amount:</strong> <?= number_format((float)($v['value'] ?? 0), 2) ?> <?= htmlspecialchars($v['currency_code'] ?? '') ?></div>
+      <?php if ($showAmount): ?>
+        <div class="voucher-field"><strong>Amount:</strong> <?= number_format((float)($v['value'] ?? 0), 2) ?> <?= htmlspecialchars($v['currency_code'] ?? '') ?></div>
+      <?php endif; ?>
       <div class="voucher-field"><strong>Top-up:</strong> ____________</div>
       <div class="voucher-field"><strong>Verify:</strong> <a href="<?= htmlspecialchars($verifyUrl) ?>" target="_blank"><?= htmlspecialchars($verifyUrl) ?></a></div>
       <div class="qr-box" data-verify-url="<?= htmlspecialchars($verifyUrl) ?>"></div>
