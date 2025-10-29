@@ -39,4 +39,52 @@ class DashboardController {
         }
         Response::redirect('/dashboard');
     }
+
+    public function pauseStore(Request $req): void {
+        if (!Auth::check() || !Auth::hasRole('admin')) { Response::redirect('/'); }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/dashboard'); return; }
+        $sid = (int)($req->body['store_id'] ?? 0);
+        if ($sid <= 0) { Response::redirect('/dashboard'); return; }
+        try {
+            $pdo = DB::conn();
+            $st = $pdo->prepare('UPDATE stores SET locked = 1 WHERE id = ?');
+            $st->execute([$sid]);
+            \flash('Shop paused', 'success');
+        } catch (\Throwable $e) { \flash('Failed to pause shop', 'error'); }
+        Response::redirect('/dashboard');
+    }
+
+    public function resumeStore(Request $req): void {
+        if (!Auth::check() || !Auth::hasRole('admin')) { Response::redirect('/'); }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/dashboard'); return; }
+        $sid = (int)($req->body['store_id'] ?? 0);
+        if ($sid <= 0) { Response::redirect('/dashboard'); return; }
+        try {
+            $pdo = DB::conn();
+            $st = $pdo->prepare('UPDATE stores SET locked = 0 WHERE id = ?');
+            $st->execute([$sid]);
+            \flash('Shop resumed', 'success');
+        } catch (\Throwable $e) { \flash('Failed to resume shop', 'error'); }
+        Response::redirect('/dashboard');
+    }
+
+    public function deleteStore(Request $req): void {
+        if (!Auth::check() || !Auth::hasRole('admin')) { Response::redirect('/'); }
+        $csrf = $req->body['csrf'] ?? null;
+        if (!verify_csrf($csrf)) { Response::redirect('/dashboard'); return; }
+        $sid = (int)($req->body['store_id'] ?? 0);
+        if ($sid <= 0) { Response::redirect('/dashboard'); return; }
+        try {
+            $pdo = DB::conn();
+            $st = $pdo->prepare('DELETE FROM stores WHERE id = ?');
+            $st->execute([$sid]);
+            if (isset($_SESSION['admin_view_store_id']) && (int)$_SESSION['admin_view_store_id'] === $sid) {
+                unset($_SESSION['admin_view_store_id']);
+            }
+            \flash('Shop deleted', 'success');
+        } catch (\Throwable $e) { \flash('Failed to delete shop', 'error'); }
+        Response::redirect('/dashboard');
+    }
 }

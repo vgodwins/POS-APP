@@ -43,8 +43,37 @@ try {
 <?php endif; ?>
 <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
 <div class="mb-3 d-flex gap-2">
+  <?php if (\App\Core\Auth::hasRole('admin')): ?>
   <a class="btn btn-success" href="/customers/create">Add Customer</a>
+  <?php endif; ?>
   <a class="btn btn-outline-primary" href="/vouchers/scan">Scan Voucher</a>
+</div>
+<?php endif; ?>
+
+<?php if (\App\Core\Auth::hasRole('admin')): ?>
+<?php
+$isLocked = false;
+try {
+  $sidSel = $selectedStoreId ?? null;
+  if ($sidSel) {
+    $pdo = DB::conn();
+    $st = $pdo->prepare('SELECT locked FROM stores WHERE id = ?');
+    $st->execute([$sidSel]);
+    $isLocked = ((int)$st->fetchColumn()) === 1;
+  }
+} catch (\Throwable $e) { $isLocked = false; }
+?>
+<div class="mb-3 d-flex gap-2">
+  <form method="post" action="/admin/store/<?= $isLocked ? 'resume' : 'pause' ?>">
+    <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+    <input type="hidden" name="store_id" value="<?= (int)($selectedStoreId ?? 0) ?>">
+    <button class="btn btn-warning" type="submit" <?= empty($selectedStoreId) ? 'disabled' : '' ?>><?= $isLocked ? 'Resume Shop' : 'Pause Shop' ?></button>
+  </form>
+  <form method="post" action="/admin/store/delete" onsubmit="return confirm('Delete this shop? This cannot be undone.');">
+    <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+    <input type="hidden" name="store_id" value="<?= (int)($selectedStoreId ?? 0) ?>">
+    <button class="btn btn-danger" type="submit" <?= empty($selectedStoreId) ? 'disabled' : '' ?>>Delete Shop</button>
+  </form>
 </div>
 <?php endif; ?>
 <div class="row">

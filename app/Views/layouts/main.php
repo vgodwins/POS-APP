@@ -45,6 +45,9 @@ if (Auth::check()) {
     .brand-logo { height: 28px; width: auto; margin-right: 8px; border-radius: 4px; }
     .nav-link { color: #fff; }
     .nav-link:hover { color: #f8f9fa; }
+    .submenu { margin-left: 1rem; }
+    .submenu .nav-link { color: #adb5bd; }
+    .submenu .nav-link:hover { color: #fff; }
     .app-name { font-weight: 600; }
     .card { border-radius: 8px; }
     .btn { border-radius: 6px; }
@@ -78,35 +81,87 @@ if (Auth::check()) {
     <ul class="nav flex-column mb-3">
       <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
-      <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
+
+      <!-- Products + Categories submenu -->
+      <li class="nav-item">
+        <a class="nav-link" href="#menu-products" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menu-products">Products</a>
+        <div class="collapse" id="menu-products">
+          <ul class="nav flex-column submenu">
+            <li class="nav-item"><a class="nav-link" href="/products">All Products</a></li>
+            <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
+            <li class="nav-item"><a class="nav-link" href="/categories">Categories</a></li>
+            <?php endif; ?>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Customers + Add Customer submenu (non-cashier) -->
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
-      <li class="nav-item"><a class="nav-link" href="/categories">Categories</a></li>
-      <li class="nav-item"><a class="nav-link" href="/customers">Customers</a></li>
-      <li class="nav-item"><a class="nav-link" href="/customers/create">Add Customer</a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#menu-customers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menu-customers">Customers</a>
+        <div class="collapse" id="menu-customers">
+          <ul class="nav flex-column submenu">
+            <li class="nav-item"><a class="nav-link" href="/customers">All Customers</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customers/create">Add Customer</a></li>
+          </ul>
+        </div>
+      </li>
       <?php endif; ?>
-      <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
-      <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
-      <?php endif; ?>
-      <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
+
+      <!-- Vouchers + Scan Voucher submenu -->
+      <li class="nav-item">
+        <a class="nav-link" href="#menu-vouchers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menu-vouchers">Vouchers</a>
+        <div class="collapse" id="menu-vouchers">
+          <ul class="nav flex-column submenu">
+            <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
+            <li class="nav-item"><a class="nav-link" href="/vouchers">All Vouchers</a></li>
+            <?php endif; ?>
+            <li class="nav-item"><a class="nav-link" href="/vouchers/scan">Scan Voucher</a></li>
+          </ul>
+        </div>
+      </li>
+
+      <!-- Users/Team + Register submenu -->
       <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
-      <li class="nav-item"><a class="nav-link" href="/users"><?= \App\Core\Auth::hasRole('owner') && !\App\Core\Auth::hasRole('admin') ? 'Team' : 'Users' ?></a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#menu-users" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menu-users"><?= \App\Core\Auth::hasRole('owner') && !\App\Core\Auth::hasRole('admin') ? 'Team' : 'Users' ?></a>
+        <div class="collapse" id="menu-users">
+          <ul class="nav flex-column submenu">
+            <li class="nav-item"><a class="nav-link" href="/users">All Users</a></li>
+            <?php if (\App\Core\Auth::hasRole('admin')): ?>
+            <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
+            <?php endif; ?>
+          </ul>
+        </div>
+      </li>
       <?php endif; ?>
-      <?php if (\App\Core\Auth::hasRole('admin')): ?>
-      <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
-      <?php endif; ?>
+
+      <!-- Reports -->
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
       <?php endif; ?>
-      <?php if (\App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('admin')): ?>
-      <li class="nav-item"><a class="nav-link" href="/subscriptions">Subscriptions</a></li>
-      <?php endif; ?>
-      <li class="nav-item"><a class="nav-link" href="/vouchers/scan">Scan Voucher</a></li>
+
+      <!-- Expenses -->
       <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('accountant')): ?>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
       <?php endif; ?>
+
+      <!-- Settings + Subscriptions submenu -->
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
-      <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+      <li class="nav-item">
+        <a class="nav-link" href="#menu-settings" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="menu-settings">Settings</a>
+        <div class="collapse" id="menu-settings">
+          <ul class="nav flex-column submenu">
+            <li class="nav-item"><a class="nav-link" href="/settings">Store Settings</a></li>
+            <?php if (\App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('admin')): ?>
+            <li class="nav-item"><a class="nav-link" href="/subscriptions">Subscriptions</a></li>
+            <?php endif; ?>
+          </ul>
+        </div>
+      </li>
       <?php endif; ?>
+
+      <!-- General Reports (Admin) -->
       <?php if (\App\Core\Auth::hasRole('admin')): ?>
       <li class="nav-item"><a class="nav-link" href="/reports/general">General Reports</a></li>
       <?php endif; ?>
@@ -116,7 +171,7 @@ if (Auth::check()) {
       <?php if ($currentUser): ?>
         <div class="mb-2">Signed in as <?= htmlspecialchars($currentUser['name'] ?? '') ?></div>
       <?php endif; ?>
-      <a class="btn btn-sm btn-outline-light" href="/logout">Logout</a>
+      <!-- Logout moved to top bar -->
     </div>
   </aside>
   <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none" aria-hidden="true"></div>
@@ -124,8 +179,13 @@ if (Auth::check()) {
   <main class="content flex-grow-1">
     <div class="container">
       <?php if (Auth::check()): ?>
-      <div class="d-md-none mb-3">
-        <button class="btn btn-outline-secondary" id="mobileMenuToggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle menu">Menu</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <button class="btn btn-outline-secondary d-md-none" id="mobileMenuToggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle menu">Menu</button>
+        </div>
+        <div>
+          <a class="btn btn-sm btn-outline-secondary" href="/logout">Logout</a>
+        </div>
       </div>
       <?php endif; ?>
       <?php foreach (flash_messages() as $fm): ?>

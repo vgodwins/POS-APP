@@ -31,6 +31,10 @@ $router->post('/password/do_reset', [AuthController::class, 'doReset']);
 $router->get('/dashboard', [DashboardController::class, 'index']);
 // Admin store context switcher
 $router->post('/admin/store/switch', [DashboardController::class, 'switchStore']);
+// Admin store actions
+$router->post('/admin/store/pause', [DashboardController::class, 'pauseStore']);
+$router->post('/admin/store/resume', [DashboardController::class, 'resumeStore']);
+$router->post('/admin/store/delete', [DashboardController::class, 'deleteStore']);
 
 // Store management (Admin)
 $router->get('/stores', [StoreController::class, 'index']);
