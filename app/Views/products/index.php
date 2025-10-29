@@ -1,11 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Products</h3>
   <div>
-    <a href="/products/upload" class="btn btn-secondary">Bulk Upload CSV</a>
-    <a href="/products/create" class="btn btn-primary">Add Product</a>
-    <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
-    <a href="/products/export.csv<?= (isset($selectedCategoryId) && $selectedCategoryId) ? ('?category_id=' . (int)$selectedCategoryId) : '' ?>" class="btn btn-outline-secondary">Export Inventory CSV</a>
-    <a href="/categories/create" class="btn btn-outline-secondary">Add New Category</a>
+    <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('manager')): ?>
+      <a href="/products/upload" class="btn btn-secondary">Bulk Upload CSV</a>
+      <a href="/products/create" class="btn btn-primary">Add Product</a>
+      <a href="/products/export.csv<?= (isset($selectedCategoryId) && $selectedCategoryId) ? ('?category_id=' . (int)$selectedCategoryId) : '' ?>" class="btn btn-outline-secondary">Export Inventory CSV</a>
+      <a href="/categories/create" class="btn btn-outline-secondary">Add New Category</a>
     <?php endif; ?>
   </div>
 </div>
@@ -87,7 +87,9 @@
         </td>
         <td><?= htmlspecialchars($p['status'] ?? 'valid') ?></td>
         <td>
-          <a href="/products/edit?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
+          <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('manager')): ?>
+            <a href="/products/edit?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
+          <?php endif; ?>
         </td>
       </tr>
     <?php endforeach; ?>

@@ -18,6 +18,7 @@
             <label class="form-label">New Password (leave blank to keep)</label>
             <input type="password" class="form-control" name="password">
           </div>
+          <?php if (empty($ownerMode)): ?>
           <div class="mb-3">
             <label class="form-label">Store</label>
             <select name="store_id" class="form-select">
@@ -27,6 +28,10 @@
               <?php endforeach; ?>
             </select>
           </div>
+          <?php else: ?>
+            <input type="hidden" name="store_id" value="<?= (int)($ownerStoreId ?? ($user['store_id'] ?? 0)) ?>">
+            <div class="alert alert-info">This user belongs to your store.</div>
+          <?php endif; ?>
           <div class="mb-3">
             <label class="form-label">Roles</label>
             <div class="d-flex gap-3">

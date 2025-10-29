@@ -20,6 +20,7 @@
             <label class="form-label">Password</label>
             <input type="password" class="form-control" name="password" required>
           </div>
+          <?php if (empty($ownerMode)): ?>
           <div class="mb-3">
             <label class="form-label">Store</label>
             <select name="store_id" class="form-select">
@@ -29,6 +30,10 @@
               <?php endforeach; ?>
             </select>
           </div>
+          <?php else: ?>
+            <input type="hidden" name="store_id" value="<?= (int)($ownerStoreId ?? 0) ?>">
+            <div class="alert alert-info">New users will be added to your store automatically.</div>
+          <?php endif; ?>
           <div class="mb-3">
             <label class="form-label">Roles</label>
             <div class="d-flex gap-3">

@@ -1,5 +1,5 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h3>Users</h3>
+  <h3><?= !empty($ownerMode) ? 'Team Members' : 'Users' ?></h3>
   <div class="btn-group">
     <a href="/users/create" class="btn btn-primary">Add User</a>
     <a href="/customers/create" class="btn btn-outline-secondary">Add New Customer</a>
@@ -14,7 +14,7 @@
       <th>Name</th>
       <th>Email</th>
       <th>Roles</th>
-      <th>Store</th>
+      <?php if (empty($ownerMode)): ?><th>Store</th><?php endif; ?>
       <th>Actions</th>
     </tr>
   </thead>
@@ -24,7 +24,9 @@
       <td><?= htmlspecialchars($u['name']) ?></td>
       <td><?= htmlspecialchars($u['email']) ?></td>
       <td><?= htmlspecialchars(is_array($u['roles']) ? implode(',', $u['roles']) : ($u['roles'] ?? '')) ?></td>
+      <?php if (empty($ownerMode)): ?>
       <td><?= htmlspecialchars($u['store_name'] ?? '') ?></td>
+      <?php endif; ?>
       <td>
         <a href="/users/edit?id=<?= (int)$u['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
         <form method="post" action="/users/delete" class="d-inline" onsubmit="return confirm('Delete this user?');">

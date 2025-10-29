@@ -11,8 +11,11 @@ class ReportController {
     private function ensureOwnerOrAdmin(): void {
         if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner'))) { Response::redirect('/'); }
     }
+    private function ensureOwnerAdminOrAccountant(): void {
+        if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner') || Auth::hasRole('accountant'))) { Response::redirect('/'); }
+    }
     public function sales(Request $req): void {
-        $this->ensureOwnerOrAdmin();
+        $this->ensureOwnerAdminOrAccountant();
         $storeId = Auth::effectiveStoreId() ?? null;
         $pdo = DB::conn();
         // Helper to run aggregate
@@ -51,7 +54,7 @@ class ReportController {
     }
 
     public function exportCsv(Request $req): void {
-        $this->ensureOwnerOrAdmin();
+        $this->ensureOwnerAdminOrAccountant();
         $storeId = Auth::effectiveStoreId() ?? null;
         $pdo = DB::conn();
         $fn = function (string $where, array $params = []) use ($pdo, $storeId) {
@@ -88,7 +91,7 @@ class ReportController {
         ];
     }
     public function filter(Request $req): void {
-        $this->ensureOwnerOrAdmin();
+        $this->ensureOwnerAdminOrAccountant();
         $storeId = Auth::effectiveStoreId() ?? null;
         $from = trim($req->body['from'] ?? $req->query['from'] ?? '');
         $to = trim($req->body['to'] ?? $req->query['to'] ?? '');

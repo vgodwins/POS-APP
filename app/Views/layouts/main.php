@@ -88,8 +88,10 @@ if (Auth::check()) {
       <li class="nav-item"><a class="nav-link" href="/vouchers">Vouchers</a></li>
       <?php endif; ?>
       <!-- Renamed Stores to Dashboard (link above). Admin can still manage stores from elsewhere -->
+      <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
+      <li class="nav-item"><a class="nav-link" href="/users"><?= \App\Core\Auth::hasRole('owner') && !\App\Core\Auth::hasRole('admin') ? 'Team' : 'Users' ?></a></li>
+      <?php endif; ?>
       <?php if (\App\Core\Auth::hasRole('admin')): ?>
-      <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
       <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
       <?php endif; ?>
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
@@ -99,7 +101,9 @@ if (Auth::check()) {
       <li class="nav-item"><a class="nav-link" href="/subscriptions">Subscriptions</a></li>
       <?php endif; ?>
       <li class="nav-item"><a class="nav-link" href="/vouchers/scan">Scan Voucher</a></li>
+      <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('accountant')): ?>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
+      <?php endif; ?>
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
       <?php endif; ?>

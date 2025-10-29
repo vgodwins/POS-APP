@@ -48,6 +48,19 @@ class User extends BaseModel {
                 GROUP BY u.id ORDER BY u.created_at DESC';
         return $this->db->query($sql)->fetchAll();
     }
+    public function allByStore(int $storeId): array {
+        $sql = 'SELECT u.*, s.name AS store_name, GROUP_CONCAT(r.name) AS roles
+                FROM users u
+                LEFT JOIN stores s ON s.id = u.store_id
+                LEFT JOIN user_roles ur ON ur.user_id = u.id
+                LEFT JOIN roles r ON r.id = ur.role_id
+                WHERE u.store_id = :sid GROUP BY u.id ORDER BY u.created_at DESC';
+        $st = $this->db->prepare($sql);
+        $st->execute(['sid' => $storeId]);
+        $rows = $st->fetchAll() ?: [];
+        foreach ($rows as &$row) { $row['roles'] = $row['roles'] ? explode(',', $row['roles']) : []; }
+        return $rows;
+    }
     public function find(int $id): ?array {
         $st = $this->db->prepare('SELECT u.*, s.name AS store_name, GROUP_CONCAT(r.name) AS roles
                 FROM users u

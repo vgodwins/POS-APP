@@ -7,8 +7,11 @@ use App\Core\Auth;
 use App\Models\Expense;
 
 class ExpenseController {
+    private function ensureOwnerAdminOrAccountant(): void {
+        if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner') || Auth::hasRole('accountant'))) { Response::redirect('/'); }
+    }
     public function index(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         $storeId = Auth::effectiveStoreId() ?? null;
         $model = new Expense();
         $list = $model->all($storeId);
@@ -16,11 +19,11 @@ class ExpenseController {
         view('expenses/index', ['expenses' => $list, 'summary' => $summary]);
     }
     public function create(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         view('expenses/create');
     }
     public function save(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { view('expenses/create', ['error' => 'Invalid session']); return; }
         $storeId = Auth::effectiveStoreId() ?? null;
@@ -33,7 +36,7 @@ class ExpenseController {
         Response::redirect('/expenses');
     }
     public function edit(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         $id = (int)($req->query['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/expenses'); return; }
         $ex = (new Expense())->find($id);
@@ -43,7 +46,7 @@ class ExpenseController {
         view('expenses/edit', ['expense' => $ex]);
     }
     public function update(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/expenses'); return; }
         $id = (int)($req->body['id'] ?? 0);
@@ -61,7 +64,7 @@ class ExpenseController {
         Response::redirect('/expenses');
     }
     public function delete(Request $req): void {
-        if (!Auth::check()) { Response::redirect('/'); }
+        $this->ensureOwnerAdminOrAccountant();
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/expenses'); return; }
         $id = (int)($req->body['id'] ?? 0);

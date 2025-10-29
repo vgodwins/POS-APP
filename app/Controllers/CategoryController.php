@@ -8,7 +8,7 @@ use App\Models\Category;
 
 class CategoryController {
     private function ensureOwnerOrAdmin(): void {
-        if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner'))) {
+        if (!Auth::check() || !(Auth::hasRole('admin') || Auth::hasRole('owner') || Auth::hasRole('manager'))) {
             Response::redirect('/');
         }
     }

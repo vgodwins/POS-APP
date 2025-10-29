@@ -43,7 +43,7 @@ class ProductController {
 
     public function exportCsv(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
-        if (!(Auth::hasRole('owner') || Auth::hasRole('admin'))) { Response::redirect('/products'); return; }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         $storeId = Auth::effectiveStoreId() ?? null;
         $categoryId = ($req->query['category_id'] ?? '') !== '' ? (int)$req->query['category_id'] : null;
         $p = new Product();
@@ -76,12 +76,14 @@ class ProductController {
     }
     public function create(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         $storeId = Auth::effectiveStoreId() ?? null;
         $cats = (new Category())->allByStore($storeId);
         view('products/create', ['categories' => $cats]);
     }
     public function save(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { view('products/create', ['error' => 'Invalid session']); return; }
         $storeId = Auth::effectiveStoreId() ?? null;
@@ -104,6 +106,7 @@ class ProductController {
     }
     public function edit(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         $id = (int)($req->query['id'] ?? 0);
         if ($id <= 0) { Response::redirect('/products'); return; }
         $p = new Product();
@@ -115,6 +118,7 @@ class ProductController {
     }
     public function update(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         $csrf = $req->body['csrf'] ?? null;
         if (!verify_csrf($csrf)) { Response::redirect('/products'); return; }
         $id = (int)($req->body['id'] ?? 0);
@@ -136,6 +140,7 @@ class ProductController {
     }
     public function uploadCsv(Request $req): void {
         if (!Auth::check()) { Response::redirect('/'); }
+        if (!(Auth::hasRole('owner') || Auth::hasRole('admin') || Auth::hasRole('manager'))) { Response::redirect('/products'); return; }
         if (($req->method === 'POST') && isset($_FILES['csv']) && $_FILES['csv']['error'] === UPLOAD_ERR_OK) {
             $storeId = Auth::effectiveStoreId() ?? null;
             if (Auth::isWriteLocked($storeId)) { view('products/upload', ['error' => 'Store is locked or outside active hours']); return; }
