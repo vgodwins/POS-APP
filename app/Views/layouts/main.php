@@ -95,6 +95,9 @@ if (Auth::check()) {
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>
       <li class="nav-item"><a class="nav-link" href="/reports/sales">Reports</a></li>
       <?php endif; ?>
+      <?php if (\App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('admin')): ?>
+      <li class="nav-item"><a class="nav-link" href="/subscriptions">Subscriptions</a></li>
+      <?php endif; ?>
       <li class="nav-item"><a class="nav-link" href="/vouchers/scan">Scan Voucher</a></li>
       <li class="nav-item"><a class="nav-link" href="/expenses">Expenses</a></li>
       <?php if (!\App\Core\Auth::hasRole('cashier')): ?>

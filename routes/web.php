@@ -12,6 +12,7 @@ use App\Controllers\SettingsController;
 use App\Controllers\UserController;
 use App\Controllers\CustomerController;
 use App\Controllers\CategoryController;
+use App\Controllers\SubscriptionController;
 
 /* @var $router Router */
 
@@ -112,3 +113,8 @@ $router->any('/categories/create', [CategoryController::class, 'create']);
  $router->any('/categories/edit', [CategoryController::class, 'edit']);
  $router->post('/categories/update', [CategoryController::class, 'update']);
  $router->post('/categories/delete', [CategoryController::class, 'delete']);
+
+// Subscriptions
+$router->get('/subscriptions', [SubscriptionController::class, 'index']);
+$router->post('/subscriptions/paystack/start', [SubscriptionController::class, 'startPaystack']);
+$router->get('/subscriptions/paystack/callback', [SubscriptionController::class, 'callbackPaystack']);

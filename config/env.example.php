@@ -26,4 +26,10 @@ return [
         'theme' => 'light',
         'low_stock_threshold' => 5,
     ],
+    'paystack' => [
+        'public_key' => 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx',
+        'secret_key' => 'sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx',
+        // If not set, will default to app.url + '/subscriptions/paystack/callback'
+        'callback_url' => 'http://localhost:8000/subscriptions/paystack/callback',
+    ],
 ];
