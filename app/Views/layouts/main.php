@@ -2,11 +2,13 @@
 use App\Core\Config;
 use App\Core\Auth;
 use App\Core\DB;
+use App\Models\Message;
 $currencySymbol = Config::get('defaults')['currency_symbol'] ?? '₦';
 $appName = Config::get('app')['name'] ?? 'Mall POS';
 $theme = Config::get('defaults')['theme'] ?? 'light';
 $logoUrl = '';
 $currentUser = Auth::user();
+$unreadCount = 0;
 if (Auth::check()) {
   $sid = Auth::user()['store_id'] ?? null;
   if ($sid) {
@@ -25,6 +27,10 @@ if (Auth::check()) {
       // Keep defaults on DB error
     }
   }
+  // Unread messages badge
+  try {
+    $unreadCount = (new Message())->unreadCountForUser((int)($currentUser['id'] ?? 0), Auth::effectiveStoreId() ?? null);
+  } catch (\Throwable $e) { $unreadCount = 0; }
 }
 ?>
 <!doctype html>
@@ -81,6 +87,7 @@ if (Auth::check()) {
     <ul class="nav flex-column mb-3">
       <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link" href="/pos">POS</a></li>
+      <li class="nav-item"><a class="nav-link" href="/messages">Messages <?= ($unreadCount ?? 0) > 0 ? '<span class="badge bg-warning text-dark">' . (int)$unreadCount . '</span>' : '' ?></a></li>
 
       <!-- Products + Categories submenu -->
       <li class="nav-item">

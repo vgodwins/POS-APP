@@ -62,6 +62,13 @@ class Voucher extends BaseModel {
     public function markUsed(int $id): void {
         $this->db->prepare('UPDATE vouchers SET status = "used" WHERE id = ?')->execute([$id]);
     }
+
+    public function redeemPartial(int $id, float $amount): void {
+        $amt = max(0.0, (float)$amount);
+        // Reduce value, and mark used when balance hits zero
+        $st = $this->db->prepare('UPDATE vouchers SET value = GREATEST(value - :amt, 0), status = CASE WHEN (value - :amt) <= 0 THEN "used" ELSE "active" END WHERE id = :id');
+        $st->execute(['amt' => $amt, 'id' => $id]);
+    }
     public function generateUniqueCode(int $length = 10): string {
         do {
             $code = strtoupper(bin2hex(random_bytes((int)ceil($length/2))));

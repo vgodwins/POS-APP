@@ -24,13 +24,23 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
         <form method="post" action="/pos/checkout" id="saleForm">
           <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
 
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label class="form-label">Scan Barcode</label>
-              <input type="text" class="form-control" id="scanBarcode" placeholder="Scan barcode here">
-              <div class="form-text" id="scanStatus"></div>
-            </div>
-          </div>
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Scan Barcode</label>
+      <input type="text" class="form-control" id="scanBarcode" placeholder="Scan barcode here">
+      <div class="form-text" id="scanStatus"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Search / Add Item</label>
+      <input type="text" class="form-control" id="productSearch" list="productList" placeholder="Type name or SKU and press Enter">
+      <datalist id="productList">
+        <?php foreach (($products ?? []) as $p): ?>
+          <option value="<?= htmlspecialchars($p['name'] ?? '') ?>">
+        <?php endforeach; ?>
+      </datalist>
+      <div class="form-text" id="searchStatus"></div>
+    </div>
+  </div>
 
           <table class="table" id="itemsTable">
             <thead>
@@ -79,18 +89,20 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
   const products = <?= json_encode($products ?? []) ?>;
   const storeTaxRate = <?= json_encode($storeTaxRate) ?>;
   let voucherValue = 0.0;
+  let rowIndex = 0;
 
   function addItemRow() {
     const tbody = document.querySelector('#itemsTable tbody');
     const tr = document.createElement('tr');
+    const idx = rowIndex++;
     tr.innerHTML = `
       <td>
-        <select name="items[][product_id]" class="form-select" onchange="updateRow(this)">
+        <select name="items[${idx}][product_id]" class="form-select" onchange="updateRow(this)">
           <option value="">Select product</option>
           ${products.map(p => `<option value="${p.id}" data-price="${p.price}" data-tax="${p.tax_rate}">${p.name}</option>`).join('')}
         </select>
       </td>
-      <td><input type="number" name="items[][qty]" class="form-control" value="1" min="1" onchange="updateRow(this)"></td>
+      <td><input type="number" name="items[${idx}][qty]" class="form-control qty" value="1" min="1" onchange="updateRow(this)"></td>
       <td class="price">0.00</td>
       <td class="line">0.00</td>
       <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); recalcTotals();">Remove</button></td>
@@ -109,7 +121,7 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
   function updateRow(el) {
     const tr = el.closest('tr');
     const sel = tr.querySelector('select');
-    const qty = parseInt(tr.querySelector('input[name="items[][qty]"]').value || '1', 10);
+    const qty = parseInt(tr.querySelector('input.qty').value || '1', 10);
     const price = parseFloat(sel.selectedOptions[0]?.getAttribute('data-price') || '0');
     const taxRate = storeTaxRate;
     tr.querySelector('.price').innerText = price.toFixed(2);
@@ -169,7 +181,7 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
       .then(js => {
         if (js && js.ok) {
           voucherValue = parseFloat(js.value || '0') || 0;
-          status.textContent = `Voucher applied: <?= htmlspecialchars($currency) ?>${voucherValue.toFixed(2)}`;
+          status.textContent = `Voucher balance: <?= htmlspecialchars($currency) ?>${voucherValue.toFixed(2)}`;
         } else {
           voucherValue = 0;
           status.textContent = 'Voucher invalid or expired';
@@ -200,6 +212,25 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
         scanInput.value = '';
       } else {
         status.textContent = 'No product found for this barcode';
+      }
+    }
+  });
+
+  // Product search by name or SKU
+  const searchInput = document.getElementById('productSearch');
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const status = document.getElementById('searchStatus');
+      if (!q) return;
+      const p = products.find(pr => (pr.name || '').toLowerCase() === q || (pr.sku || '').toLowerCase() === q);
+      if (p) {
+        addItemRowWithProduct(p.id);
+        status.textContent = `Added: ${p.name}`;
+        searchInput.value = '';
+      } else {
+        status.textContent = 'No product matched name or SKU';
       }
     }
   });

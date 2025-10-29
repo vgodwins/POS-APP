@@ -13,6 +13,7 @@ use App\Controllers\UserController;
 use App\Controllers\CustomerController;
 use App\Controllers\CategoryController;
 use App\Controllers\SubscriptionController;
+use App\Controllers\MessageController;
 
 /* @var $router Router */
 
@@ -121,4 +122,9 @@ $router->any('/categories/create', [CategoryController::class, 'create']);
 // Subscriptions
 $router->get('/subscriptions', [SubscriptionController::class, 'index']);
 $router->post('/subscriptions/paystack/start', [SubscriptionController::class, 'startPaystack']);
-$router->get('/subscriptions/paystack/callback', [SubscriptionController::class, 'callbackPaystack']);
+ $router->get('/subscriptions/paystack/callback', [SubscriptionController::class, 'callbackPaystack']);
+
+// Messages
+$router->get('/messages', [MessageController::class, 'index']);
+$router->any('/messages/create', [MessageController::class, 'create']);
+$router->post('/messages/read', [MessageController::class, 'markRead']);

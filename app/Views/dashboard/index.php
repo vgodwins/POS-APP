@@ -41,6 +41,73 @@ try {
   <hr>
   </div>
 <?php endif; ?>
+<?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner') || \App\Core\Auth::hasRole('manager') || \App\Core\Auth::hasRole('accountant')): ?>
+<div class="card mt-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <strong>Inventory Summary</strong>
+    <div>
+      <a class="btn btn-sm btn-outline-secondary" href="/products/export.csv<?= isset($inventory['category_id']) && $inventory['category_id'] ? ('?category_id=' . (int)$inventory['category_id']) : '' ?>">Export Inventory CSV</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <form class="row g-2 mb-3" method="get" action="/dashboard">
+      <div class="col-md-4">
+        <label class="form-label">Status</label>
+        <?php $sel = strtolower($inventory['status'] ?? ''); ?>
+        <select class="form-select" name="inventory_status">
+          <option value="" <?= $sel === '' ? 'selected' : '' ?>>All</option>
+          <option value="valid" <?= $sel === 'valid' ? 'selected' : '' ?>>Valid</option>
+          <option value="expired" <?= $sel === 'expired' ? 'selected' : '' ?>>Expired</option>
+          <option value="damaged" <?= $sel === 'damaged' ? 'selected' : '' ?>>Damaged</option>
+          <option value="returned" <?= $sel === 'returned' ? 'selected' : '' ?>>Returned</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Category</label>
+        <select class="form-select" name="inventory_category_id">
+          <option value="">All</option>
+          <?php foreach (($categories ?? []) as $cat): ?>
+            <option value="<?= (int)$cat['id'] ?>" <?= (isset($inventory['category_id']) && $inventory['category_id'] === (int)$cat['id']) ? 'selected' : '' ?>><?= htmlspecialchars($cat['name'] ?? '') ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary" type="submit">Apply Filters</button>
+      </div>
+    </form>
+    <?php if ($inventory): ?>
+      <div class="row text-center">
+        <div class="col-md-3">
+          <div class="p-2 border rounded">
+            <div class="fw-bold">Products</div>
+            <div><?= (int)($inventory['items'] ?? 0) ?></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-2 border rounded">
+            <div class="fw-bold">Total Units</div>
+            <div><?= (int)($inventory['units'] ?? 0) ?></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-2 border rounded">
+            <div class="fw-bold">Stock Value (Price)</div>
+            <div><?= htmlspecialchars(($currency ?? (\App\Core\Config::get('defaults')['currency_symbol'] ?? '₦'))) ?><?= number_format((float)($inventory['value_price'] ?? 0), 2) ?></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="p-2 border rounded">
+            <div class="fw-bold">Stock Value (Cost)</div>
+            <div><?= htmlspecialchars(($currency ?? (\App\Core\Config::get('defaults')['currency_symbol'] ?? '₦'))) ?><?= number_format((float)($inventory['value_cost'] ?? 0), 2) ?></div>
+          </div>
+        </div>
+      </div>
+    <?php else: ?>
+      <p class="text-muted mb-0">No inventory data available.</p>
+    <?php endif; ?>
+  </div>
+</div>
+<?php endif; ?>
 <?php if (\App\Core\Auth::hasRole('admin') || \App\Core\Auth::hasRole('owner')): ?>
 <div class="mb-3 d-flex gap-2">
   <?php if (\App\Core\Auth::hasRole('admin')): ?>

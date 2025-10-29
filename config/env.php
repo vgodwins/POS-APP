@@ -27,4 +27,11 @@ return [
         'theme' => 'light',
         'low_stock_threshold' => 5,
     ],
+     'paystack' => [
+        // Replace with your actual Paystack credentials
+        'public_key' => 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx',
+        'secret_key' => 'sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx',
+        // Local callback URL for subscription verification
+        'callback_url' => 'http://127.0.0.1:8001/subscriptions/paystack/callback',
+    ],
 ];

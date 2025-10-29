@@ -25,7 +25,38 @@ class DashboardController {
                 $stores = (new Store())->all();
             } catch (\Throwable $e) { $recentUsers = []; }
         }
-        view('dashboard/index', ['metrics' => $metrics, 'recentUsers' => $recentUsers, 'stores' => $stores, 'selectedStoreId' => $selectedStoreId]);
+        // Inventory summary (admin/owner/manager/accountant)
+        $inventory = null; $categories = [];
+        try {
+            $storeId = Auth::effectiveStoreId() ?? null;
+            if ($storeId) {
+                $categoryId = ($req->query['inventory_category_id'] ?? '') !== '' ? (int)$req->query['inventory_category_id'] : null;
+                $statusFilter = trim($req->query['inventory_status'] ?? '');
+                $plist = (new \App\Models\Product())->all($storeId, $categoryId);
+                if ($statusFilter !== '') { $plist = array_values(array_filter($plist, fn($r) => strtolower($r['status'] ?? '') === strtolower($statusFilter))); }
+                $totalItems = count($plist);
+                $totalUnits = array_sum(array_map(fn($r) => (int)($r['stock'] ?? 0), $plist));
+                $totalValuePrice = array_sum(array_map(fn($r) => (float)($r['price'] ?? 0) * (int)($r['stock'] ?? 0), $plist));
+                $totalValueCost = array_sum(array_map(fn($r) => (float)($r['cost_price'] ?? 0) * (int)($r['stock'] ?? 0), $plist));
+                $inventory = [
+                    'items' => $totalItems,
+                    'units' => $totalUnits,
+                    'value_price' => $totalValuePrice,
+                    'value_cost' => $totalValueCost,
+                    'status' => $statusFilter,
+                    'category_id' => $categoryId,
+                ];
+                $categories = (new \App\Models\Category())->allByStore($storeId);
+            }
+        } catch (\Throwable $e) { $inventory = null; $categories = []; }
+        view('dashboard/index', [
+            'metrics' => $metrics,
+            'recentUsers' => $recentUsers,
+            'stores' => $stores,
+            'selectedStoreId' => $selectedStoreId,
+            'inventory' => $inventory,
+            'categories' => $categories,
+        ]);
     }
     public function switchStore(Request $req): void {
         if (!Auth::check() || !Auth::hasRole('admin')) { Response::redirect('/'); }

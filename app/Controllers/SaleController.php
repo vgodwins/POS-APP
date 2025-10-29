@@ -71,14 +71,14 @@ class SaleController {
         $total = $subtotal + $taxTotal;
 
         // Voucher redemption
-        $voucherApplied = 0.0; $voucherId = null;
+        $voucherApplied = 0.0; $voucherId = null; $voucherBalance = 0.0;
+        $vModel = new Voucher();
         if ($voucherCode !== '') {
-            $vModel = new Voucher();
             $voucher = $vModel->findByCode($voucherCode, $storeId);
             if ($voucher) {
                 // Check expiry
                 if (strtotime($voucher['expiry_date']) >= strtotime(date('Y-m-d'))) {
-                    $voucherApplied = min((float)$voucher['value'], $total);
+                    $voucherBalance = (float)$voucher['value'];
                     $voucherId = (int)$voucher['id'];
                 }
             }
@@ -87,6 +87,8 @@ class SaleController {
         // Payments: auto-fill cash to cover remainder, relax strict equality
         $payCard = (float)($payments['card'] ?? 0);
         $payBank = (float)($payments['bank_transfer'] ?? 0);
+        // Apply voucher only as needed after card/bank
+        $voucherApplied = min($voucherBalance, max(0.0, $total - ($payCard + $payBank)));
         $payVoucher = $voucherApplied;
         $nonCash = $payCard + $payBank + $payVoucher;
         if ($nonCash >= $total) {
@@ -114,7 +116,7 @@ class SaleController {
             'cash' => $payCash, 'card' => $payCard, 'bank_transfer' => $payBank, 'voucher' => $payVoucher, 'voucher_id' => $voucherId
         ]);
 
-        if ($voucherId) { (new Voucher())->markUsed($voucherId); }
+        if ($voucherId && $voucherApplied > 0) { (new Voucher())->redeemPartial($voucherId, $voucherApplied); }
 
         // Redirect to receipt
         $_SESSION['last_sale_id'] = $saleId;
