@@ -127,4 +127,5 @@ $router->post('/subscriptions/paystack/start', [SubscriptionController::class, '
 // Messages
 $router->get('/messages', [MessageController::class, 'index']);
 $router->any('/messages/create', [MessageController::class, 'create']);
+$router->any('/messages/view', [MessageController::class, 'view']);
 $router->post('/messages/read', [MessageController::class, 'markRead']);

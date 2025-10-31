@@ -59,6 +59,16 @@ class Voucher extends BaseModel {
         $row = $st->fetch();
         return $row ?: null;
     }
+
+    public function findByCodeAnyStatus(string $code, ?int $storeId): ?array {
+        $sql = 'SELECT * FROM vouchers WHERE code = :code';
+        $params = ['code' => $code];
+        if ($storeId) { $sql .= ' AND store_id = :sid'; $params['sid'] = $storeId; }
+        $st = $this->db->prepare($sql);
+        $st->execute($params);
+        $row = $st->fetch();
+        return $row ?: null;
+    }
     public function markUsed(int $id): void {
         $this->db->prepare('UPDATE vouchers SET status = "used" WHERE id = ?')->execute([$id]);
     }

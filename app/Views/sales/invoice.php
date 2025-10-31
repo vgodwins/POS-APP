@@ -86,8 +86,9 @@ $balanceDue = max($totalAmount - $amountPaid, 0);
           <h6>Payments</h6>
           <ul class="list-group">
             <?php foreach (($payments ?? []) as $p): ?>
+              <?php $mBase = ucwords(str_replace('_', ' ', (string)$p['method'])); $m = $mBase; if (strtolower((string)$p['method']) === 'voucher' && !empty($p['voucher_code'])) { $m = $mBase . ' (' . (string)$p['voucher_code'] . ')'; } ?>
               <li class="list-group-item d-flex justify-content-between">
-                <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', (string)$p['method']))) ?></span>
+                <span><?= htmlspecialchars($m) ?></span>
                 <span><?= htmlspecialchars($currencySymbol) ?><?= number_format((float)$p['amount'], 2) ?></span>
               </li>
             <?php endforeach; ?>

@@ -263,13 +263,30 @@ class VoucherController {
         $storeId = Auth::check() ? (Auth::effectiveStoreId() ?? null) : null;
         $status = ['ok' => false, 'message' => 'Missing code'];
         $voucher = null;
+        $currencySymbol = (Config::get('defaults')['currency_symbol'] ?? '₦');
+        $store = null;
+        if ($storeId) {
+            try {
+                if (!empty($store['currency_symbol'])) { $currencySymbol = $store['currency_symbol']; }
+                $store = (new Store())->find((int)$storeId);
+            } catch (\Throwable $e) { /* ignore */ }
+        }
         if ($code !== '') {
             try {
                 $v = new Voucher();
-                $voucher = $v->findByCode($code, $storeId);
+                $voucher = $v->findByCodeAnyStatus($code, $storeId);
                 if ($voucher) {
-                    $valid = strtotime($voucher['expiry_date']) >= strtotime(date('Y-m-d')) && $voucher['status'] === 'active';
-                    $status = $valid ? ['ok' => true, 'message' => 'Voucher is valid'] : ['ok' => false, 'message' => 'Voucher is expired or already used'];
+                    $expired = strtotime($voucher['expiry_date']) < strtotime(date('Y-m-d'));
+                    $used = strtolower((string)$voucher['status']) === 'used' || (float)($voucher['value'] ?? 0) <= 0;
+                    if (!$expired && !$used && strtolower((string)$voucher['status']) === 'active') {
+                        $status = ['ok' => true, 'message' => 'Voucher is valid'];
+                    } elseif ($expired) {
+                        $status = ['ok' => false, 'message' => 'Voucher is expired'];
+                    } elseif ($used) {
+                        $status = ['ok' => false, 'message' => 'Voucher is already used'];
+                    } else {
+                        $status = ['ok' => false, 'message' => 'Voucher status invalid'];
+                    }
                 } else {
                     $status = ['ok' => false, 'message' => 'Voucher not found'];
                 }
@@ -277,7 +294,7 @@ class VoucherController {
                 $status = ['ok' => false, 'message' => 'Server error'];
             }
         }
-        view('vouchers/verify', ['status' => $status, 'voucher' => $voucher]);
+        view('vouchers/verify', ['status' => $status, 'voucher' => $voucher, 'currencySymbol' => $currencySymbol, 'store' => $store]);
     }
 
     public function scan(Request $req): void {
@@ -292,10 +309,13 @@ class VoucherController {
         $storeId = Auth::effectiveStoreId() ?? null;
         try {
             $v = new Voucher();
-            $voucher = $v->findByCode($code, $storeId);
+            $voucher = $v->findByCodeAnyStatus($code, $storeId);
             if (!$voucher) { Response::json(['ok' => false, 'error' => 'invalid'], 404); }
-            $valid = strtotime($voucher['expiry_date']) >= strtotime(date('Y-m-d')) && $voucher['status'] === 'active';
-            if (!$valid) { Response::json(['ok' => false, 'error' => 'expired_or_used'], 400); }
+            $expired = strtotime($voucher['expiry_date']) < strtotime(date('Y-m-d'));
+            $used = strtolower((string)$voucher['status']) === 'used' || (float)($voucher['value'] ?? 0) <= 0;
+            if ($expired) { Response::json(['ok' => false, 'error' => 'expired'], 400); }
+            if ($used) { Response::json(['ok' => false, 'error' => 'used'], 400); }
+            if (strtolower((string)$voucher['status']) !== 'active') { Response::json(['ok' => false, 'error' => 'invalid_status'], 400); }
             Response::json(['ok' => true, 'value' => (float)$voucher['value']]);
         } catch (\Throwable $e) {
             Response::json(['ok' => false, 'error' => 'server_error'], 500);

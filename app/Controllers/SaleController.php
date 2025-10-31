@@ -153,7 +153,7 @@ class SaleController {
         $pdo = \App\Core\DB::conn();
         $sale = $pdo->prepare('SELECT * FROM sales WHERE id = ?'); $sale->execute([$saleId]); $saleRow = $sale->fetch();
         $items = $pdo->prepare('SELECT * FROM sale_items WHERE sale_id = ?'); $items->execute([$saleId]); $saleItems = $items->fetchAll();
-        $payments = $pdo->prepare('SELECT * FROM payments WHERE sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
+        $payments = $pdo->prepare('SELECT p.*, v.code AS voucher_code FROM payments p LEFT JOIN vouchers v ON v.id = p.voucher_id WHERE p.sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
         $storeRow = null;
         try {
             $sid = (int)($saleRow['store_id'] ?? 0);
@@ -172,7 +172,7 @@ class SaleController {
         $sale = $pdo->prepare('SELECT * FROM sales WHERE id = ?'); $sale->execute([$saleId]); $saleRow = $sale->fetch();
         if (!$saleRow) { Response::redirect('/dashboard'); return; }
         $items = $pdo->prepare('SELECT * FROM sale_items WHERE sale_id = ?'); $items->execute([$saleId]); $saleItems = $items->fetchAll();
-        $payments = $pdo->prepare('SELECT * FROM payments WHERE sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
+        $payments = $pdo->prepare('SELECT p.*, v.code AS voucher_code FROM payments p LEFT JOIN vouchers v ON v.id = p.voucher_id WHERE p.sale_id = ?'); $payments->execute([$saleId]); $salePayments = $payments->fetchAll();
         $storeRow = null;
         try {
             $sid = (int)($saleRow['store_id'] ?? 0);

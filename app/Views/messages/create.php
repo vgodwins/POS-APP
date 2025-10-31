@@ -18,6 +18,16 @@
             </select>
           </div>
           <div class="mb-3">
+            <label class="form-label">Or Send to Customer</label>
+            <select class="form-select" name="recipient_customer_id">
+              <option value="">— Select customer (optional) —</option>
+              <?php foreach (($customers ?? []) as $c): ?>
+                <option value="<?= (int)$c['id'] ?>"><?= htmlspecialchars($c['name'] ?? '') ?><?= !empty($c['email']) ? ' (' . htmlspecialchars($c['email']) . ')' : '' ?></option>
+              <?php endforeach; ?>
+            </select>
+            <small class="text-muted">Admins/owners/managers can send messages to customers. Customers will receive an email notification.</small>
+          </div>
+          <div class="mb-3">
             <label class="form-label">Subject (optional)</label>
             <input type="text" class="form-control" name="subject" placeholder="Subject">
           </div>

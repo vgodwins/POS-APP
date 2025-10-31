@@ -19,6 +19,10 @@
           <small class="text-muted">From <?= htmlspecialchars($m['sender_name'] ?? 'Unknown') ?> • <?= htmlspecialchars($m['created_at'] ?? '') ?></small>
         </div>
         <div class="mt-2"><?= nl2br(htmlspecialchars($m['body'] ?? '')) ?></div>
+        <div class="mt-2 d-flex gap-2">
+          <?php $rootId = !empty($m['parent_id']) ? (int)$m['parent_id'] : (int)$m['id']; ?>
+          <a class="btn btn-sm btn-outline-secondary" href="/messages/view?id=<?= $rootId ?>">Open Thread</a>
+        </div>
         <?php if (strtolower($m['status'] ?? '') === 'unread'): ?>
           <form class="mt-2" method="post" action="/messages/read">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">

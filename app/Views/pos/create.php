@@ -72,6 +72,10 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
               <label class="form-label">Bank Transfer</label>
               <input type="number" step="0.01" class="form-control" name="payments[bank_transfer]" value="0">
             </div>
+            <div class="col-md-3">
+              <label class="form-label">Voucher (applied)</label>
+              <input type="number" step="0.01" class="form-control" name="payments[voucher]" value="0" readonly>
+            </div>
           </div>
 
           <div class="mt-3">
@@ -150,9 +154,12 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
     const cardEl = document.querySelector('input[name="payments[card]"]');
     const bankEl = document.querySelector('input[name="payments[bank_transfer]"]');
     const cashEl = document.querySelector('input[name="payments[cash]"]');
+    const voucherEl = document.querySelector('input[name="payments[voucher]"]');
     const card = parseFloat(cardEl.value || '0') || 0;
     const bank = parseFloat(bankEl.value || '0') || 0;
-    const nonCash = card + bank + voucherValue;
+    const voucherApplied = Math.min(voucherValue, Math.max(0, total - card - bank));
+    if (voucherEl) { voucherEl.value = voucherApplied.toFixed(2); }
+    const nonCash = card + bank + voucherApplied;
     let cash = 0;
     if (nonCash >= total) {
       // clamp non-cash to fit total
@@ -184,7 +191,10 @@ $storeTaxRate = isset($store['tax_rate']) ? (float)$store['tax_rate'] : (float)(
           status.textContent = `Voucher balance: <?= htmlspecialchars($currency) ?>${voucherValue.toFixed(2)}`;
         } else {
           voucherValue = 0;
-          status.textContent = 'Voucher invalid or expired';
+          if (js && js.error === 'expired') { status.textContent = 'Voucher expired'; }
+          else if (js && js.error === 'used') { status.textContent = 'Voucher already used'; }
+          else if (js && js.error === 'invalid') { status.textContent = 'Voucher not found'; }
+          else { status.textContent = 'Voucher invalid or expired'; }
         }
         recalcTotals();
       })

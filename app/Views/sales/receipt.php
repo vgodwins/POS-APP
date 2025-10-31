@@ -53,7 +53,11 @@ $totals[] = str_repeat('-', $width);
 // Payments
 $payLines = [];
 foreach (($payments ?? []) as $p) {
-    $method = ucwords(str_replace('_', ' ', (string)$p['method']));
+    $methodBase = ucwords(str_replace('_', ' ', (string)$p['method']));
+    $method = $methodBase;
+    if (strtolower((string)$p['method']) === 'voucher' && !empty($p['voucher_code'])) {
+        $method = $methodBase . ' (' . (string)$p['voucher_code'] . ')';
+    }
     $amt = $currency . number_format((float)$p['amount'], 2);
     $payLines[] = str_pad($method, 12) . str_pad($amt, $width - 12, ' ', STR_PAD_LEFT);
 }
